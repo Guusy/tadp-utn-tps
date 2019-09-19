@@ -1,18 +1,28 @@
 require 'tadb'
 module Orm
   def save!
-    singleton_class.module_eval { attr_accessor :id}
-    @id = "0"
+    self.singleton_class.module_eval { attr_accessor :id }
+    hash = {}
+    self.class.columns.each do | column |
+      hash[column] = self.send(column)
+    end
+    @id = TADB::DB.table(self.class.name.downcase).insert(hash)
   end
 
   def resfresh!
-    if !self.id
+    unless self.respond_to?(:id)
       raise "Este objeto no esta persistido"
     end
   end
 
   module ClassMethods
+    attr_accessor :columns
+
     def has_one(i, named:)
+      unless @columns
+        @columns = []
+      end
+      @columns.push(named)
       attr_accessor named
     end
   end
