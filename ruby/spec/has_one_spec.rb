@@ -1,11 +1,8 @@
-require 'rspec'
-require_relative '../src/Orm'
-
 describe 'has_one' do
   context 'cuando se declara una clase con has_one' do
     before do
       class Persona
-        extend Orm
+        include Orm
         has_one String, named: :nombre
       end
     end
