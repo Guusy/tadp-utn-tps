@@ -6,8 +6,11 @@ module Orm
   end
 
   def resfresh!
-    raise "Este objeto no esta persistido"
+    if !self.id
+      raise "Este objeto no esta persistido"
+    end
   end
+
   module ClassMethods
     def has_one(i, named:)
       attr_accessor named
