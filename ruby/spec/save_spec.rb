@@ -1,9 +1,9 @@
 describe 'save' do
   context 'cuando se ejecuta en un objeto no persistido' do
     before do
+      TADB::DB.clear_all
       class Persona
         include Orm
-
       end
       @persona = Persona.new
       @persona.save!
