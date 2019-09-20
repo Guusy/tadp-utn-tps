@@ -10,7 +10,7 @@ describe 'save' do
       @persona = Persona.new
       @persona.nombre = "Gonzalo gras cantou"
       @persona.save!
-      @persona_db = get_find_by_id(@persona.id)
+      @persona_db = find_by_id("persona", @persona.id)
     end
 
     it 'Le genera agrega la propiedad Id' do
@@ -23,13 +23,6 @@ describe 'save' do
 
     it 'no agrega los atributos a la DB que no fueron marcados como persistibles' do
       expect(@persona_db[:valor_no_persistido]).to eq nil
-    end
-
-    def get_find_by_id(id)
-      return TADB::DB.table('persona')
-                 .entries
-                 .select { |entry| entry[:id] === id }
-                 .first
     end
 
   end

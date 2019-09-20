@@ -9,7 +9,6 @@ describe 'refresh' do
     end
   end
 
-
   context 'cuando se hace refresh sobre un objeto no persistido' do
     before do
       @patito_no_persistible = Patito.new
@@ -19,17 +18,21 @@ describe 'refresh' do
     end
   end
 
-  context 'cuando se hace refresh sobre un objeto persistido' do
+  context 'cuando se se modifica un objeto persistido' do
     before do
       @patito_persistido = Patito.new
       @patito_persistido.color = 'amarillo'
       @patito_persistido.save!
       @patito_persistido.color = 'rojo'
-      @patito_persistido.resfresh!
     end
     it 'se actualizan la propiedades en el objeto' do
-      @patito_persistido.color.should eq('rojo')
+      expect(@patito_persistido.color).to eq('rojo')
     end
-
+    context "y se hace refresh sobre el" do
+      it 'se vuelve a su estado inicial' do
+        @patito_persistido.resfresh!
+        expect(@patito_persistido.color).to eq('amarillo')
+      end
+    end
   end
 end
