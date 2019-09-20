@@ -18,7 +18,10 @@ module Orm
     self.singleton_class.module_eval { attr_accessor :id }
     hash = {}
     get_columns.each do |column|
-      hash[column] = self.send(column)
+      valor = self.send(column)
+      if valor
+        hash[column] = valor
+      end
     end
     @id = TADB::DB.table(get_table).insert(hash)
     self.class.add_column(:id)

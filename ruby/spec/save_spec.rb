@@ -4,6 +4,7 @@ describe 'save' do
       class Persona
         include Orm
         has_one String, named: :nombre
+        has_one String, named: :apellido
         attr_accessor :valor_no_persistido
       end
       @persona = Persona.new
@@ -26,5 +27,8 @@ describe 'save' do
       expect(@persona_db[:valor_no_persistido]).to eq nil
     end
 
+    it 'se ignoran los attributos que no tienen valor' do
+      expect(@persona_db[:apellido]).to eq nil
+    end
   end
 end
