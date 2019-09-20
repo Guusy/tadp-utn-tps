@@ -8,6 +8,12 @@ module Orm
     self.class.columns
   end
 
+  def check_id
+    unless self.respond_to?(:id)
+      raise "Este objeto no esta persistido"
+    end
+  end
+
   def save!
     self.singleton_class.module_eval { attr_accessor :id }
     hash = {}
@@ -18,9 +24,7 @@ module Orm
   end
 
   def resfresh!
-    unless self.respond_to?(:id)
-      raise "Este objeto no esta persistido"
-    end
+    check_id
     object_in_db = TADB::DB.table(get_table)
                        .entries
                        .select { |entry| entry[:id] === self.id }
@@ -28,6 +32,10 @@ module Orm
     get_columns.each do |column |
       self.instance_variable_set("@#{column}", object_in_db[column])
     end
+  end
+
+  def forget!
+    check_id
   end
 
   module ClassMethods
