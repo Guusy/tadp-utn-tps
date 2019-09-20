@@ -21,6 +21,7 @@ module Orm
       hash[column] = self.send(column)
     end
     @id = TADB::DB.table(get_table).insert(hash)
+    self.class.add_column(:id)
   end
 
   def resfresh!
@@ -29,7 +30,7 @@ module Orm
                        .entries
                        .select { |entry| entry[:id] === self.id }
                        .first
-    get_columns.each do |column |
+    get_columns.each do |column|
       self.instance_variable_set("@#{column}", object_in_db[column])
     end
   end
@@ -38,6 +39,17 @@ module Orm
     check_id
     TADB::DB.table(get_table).delete(self.id)
     self.id = nil
+  end
+
+  def all_instances
+    TADB::DB.table(get_table).entries.map { |entry|
+      domain_object = self.class.new
+      domain_object.singleton_class.module_eval { attr_accessor :id }
+      get_columns.each do |column |
+        domain_object.instance_variable_set("@#{column}", entry[column])
+      end
+      domain_object
+    }
   end
 
   module ClassMethods
@@ -49,6 +61,14 @@ module Orm
       end
       @columns.push(named)
       attr_accessor named
+    end
+
+    def add_column(column)
+      unless @columns
+        @columns = []
+      end
+      @columns.push(column)
+
     end
   end
 
