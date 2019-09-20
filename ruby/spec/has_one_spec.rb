@@ -6,6 +6,9 @@ describe 'has_one' do
         has_one String, named: :nombre
       end
     end
+    after do
+      TADB::DB.clear_all
+    end
     it 'se le agrega el atributo a la' do
       persona = Persona.new
       expect(persona).to have_attributes(:nombre => nil)

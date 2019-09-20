@@ -1,7 +1,6 @@
 describe 'save' do
   context 'cuando se ejecuta en un objeto no persistido' do
     before do
-      TADB::DB.clear_all
       class Persona
         include Orm
         has_one String, named: :nombre
@@ -12,7 +11,9 @@ describe 'save' do
       @persona.save!
       @persona_db = find_by_id("persona", @persona.id)
     end
-
+    after do
+      TADB::DB.clear_all
+    end
     it 'Le genera agrega la propiedad Id' do
       expect(@persona).to respond_to(:id)
     end

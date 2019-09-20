@@ -2,13 +2,14 @@ require 'rspec'
 
 describe 'refresh' do
   before do
-    TADB::DB.clear_all
     class Patito
       include Orm
       has_one String, named: :color
     end
   end
-
+  after do
+    TADB::DB.clear_all
+  end
   context 'cuando se hace refresh sobre un objeto no persistido' do
     before do
       @patito_no_persistible = Patito.new
