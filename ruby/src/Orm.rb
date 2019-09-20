@@ -76,7 +76,10 @@ module Orm
     def method_missing(symbol, *args, &block)
       nombre_mensaje = symbol.to_s
       if nombre_mensaje.start_with?('search_by_')
-        message = nombre_mensaje.gsub('search_by_', '').to_sym
+        mensaje = nombre_mensaje.gsub('search_by_', '').to_sym
+        if self.instance_method(mensaje).arity > 0
+          raise "No se puede utilizar una propiedad que reciba argumentos"
+        end
         objetos_de_dominio = TADB::DB.table(self.name.downcase).entries.map do |entry|
           objeto_de_dominio = self.new
           objeto_de_dominio.singleton_class.module_eval { attr_accessor :id }
@@ -88,9 +91,9 @@ module Orm
           objeto_de_dominio
         end
         objetos_de_dominio.select do |objeto_de_dominio|
-          objeto_de_dominio.send(message) == args[0]
+          objeto_de_dominio.send(mensaje) == args[0]
         end
-        ## && args.length == 1
+
       else
         super
       end

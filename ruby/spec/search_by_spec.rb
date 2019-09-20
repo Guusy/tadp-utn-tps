@@ -41,7 +41,13 @@ describe 'search_by' do
     it 'se devuelven esos valores' do
       resultado = Persona.search_by_nombre("Martin Gonzalez")
       expect(resultado.size).to eq(1)
-      expect(resultado[0].id).to eq(@martin.id )
+      expect(resultado[0].id).to eq(@martin.id)
+    end
+  end
+
+  context 'se busca por una condicion sobre un metodo con argumentos ' do
+    it 'y falla con "No se puede utilizar una propiedad que reciba argumentos"' do
+      expect { Persona.search_by_saludar }.to raise_exception("No se puede utilizar una propiedad que reciba argumentos")
     end
   end
 
