@@ -48,7 +48,7 @@ module Orm
     TADB::DB.table(get_table).entries.map { |entry|
       domain_object = self.class.new
       domain_object.singleton_class.module_eval { attr_accessor :id }
-      get_columns.each do |column |
+      get_columns.each do |column|
         domain_object.instance_variable_set("@#{column}", entry[column])
       end
       domain_object
@@ -71,7 +71,29 @@ module Orm
         @columns = []
       end
       @columns.push(column)
+    end
 
+    def method_missing(symbol, *args, &block)
+      nombre_mensaje = symbol.to_s
+      if nombre_mensaje.start_with?('search_by_')
+        message = nombre_mensaje.gsub('search_by_', '').to_sym
+        objetos_de_dominio = TADB::DB.table(self.name.downcase).entries.map do |entry|
+          objeto_de_dominio = self.new
+          objeto_de_dominio.singleton_class.module_eval { attr_accessor :id }
+          @columns.each do |column|
+            if entry[column]
+              objeto_de_dominio.instance_variable_set("@#{column}", entry[column])
+            end
+          end
+          objeto_de_dominio
+        end
+        objetos_de_dominio.select do |objeto_de_dominio|
+          objeto_de_dominio.send(message) == args[0]
+        end
+        ## && args.length == 1
+      else
+        super
+      end
     end
   end
 

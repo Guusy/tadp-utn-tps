@@ -22,7 +22,7 @@ describe 'all_instances' do
       @computadora_1.save!
       @computadora_2 = Computadora.new
       @computadora_2.save!
-      @computadora_3 = ComputadoKra.new
+      @computadora_3 = Computadora.new
       @computadora_3.save!
       @all_instances = @computadora_1.all_instances
 
