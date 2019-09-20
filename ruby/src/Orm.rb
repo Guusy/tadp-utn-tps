@@ -5,7 +5,7 @@ module Orm
   end
 
   def get_columns
-    self.class.columns
+    self.class.columns || []
   end
 
   def check_id
@@ -36,6 +36,8 @@ module Orm
 
   def forget!
     check_id
+    TADB::DB.table(get_table).delete(self.id)
+    self.id = nil
   end
 
   module ClassMethods
