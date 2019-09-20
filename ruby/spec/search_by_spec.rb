@@ -51,4 +51,23 @@ describe 'search_by' do
     end
   end
 
+  context 'se busca por una condicion sobre un metodo sin argumentos, pasandole el resultado esperado' do
+    before do
+      @martin = Persona.new
+      @martin.edad = 24
+      @martin.save!
+      @gonza = Persona.new
+      @gonza.edad = 12
+      @gonza.save!
+    end
+
+    it 'devuelve los resultados que matchean con esa busqueda' do
+      resultado = Persona.search_by_es_mayor(true)
+      expect(resultado.size).to eq(1)
+      expect(resultado[0].id).to eq(@martin.id)
+      resultado_false = Persona.search_by_es_mayor(false)
+      expect(resultado_false.size).to eq(1)
+      expect(resultado_false[0].id).to eq(@gonza.id)
+    end
+  end
 end
