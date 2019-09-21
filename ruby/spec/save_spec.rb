@@ -42,7 +42,7 @@ describe 'save' do
         has_one Notebook, named: :notebook
       end
     end
-    context "que aun no estan persistidas" do
+    context "que aun no estan persistidos" do
       before do
         @notebook = Notebook.new
         @notebook.numero_serial = "213ACDE23"
@@ -59,6 +59,27 @@ describe 'save' do
       it 'los atributos no primitivos se registran en sus respectivas base de datos' do
         notebook_db = find_by_id('notebook', @notebook.id)
         expect(notebook_db[:numero_serial]).to eq(@notebook.numero_serial)
+      end
+    end
+
+    context "que ya estan persistidos" do
+      before do
+        @notebook = Notebook.new
+        @notebook.numero_serial = "213ACDE23"
+        @notebook.save!
+        @programador = Programador.new
+        @programador.notebook = @notebook
+        @programador.save!
+      end
+
+      it 'los atributos no primitivos se referencian con un id en la base de datos' do
+        programador_db = find_by_id('programador', @programador.id)
+        expect(programador_db[:notebook]).to eq(@notebook.id)
+      end
+
+      it 'no se persiste 2 veces el atributo referenciado' do
+        notebooks_db =  TADB::DB.table('notebook').entries
+        expect(notebooks_db.size).to eq(1)
       end
     end
   end

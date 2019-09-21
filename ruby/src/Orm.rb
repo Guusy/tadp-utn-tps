@@ -24,7 +24,9 @@ module Orm
       if valor
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
-          valor.save!
+          unless valor.respond_to?(:id)
+            valor.save!
+          end
           valor_a_guardar = valor.id
         else
         end
