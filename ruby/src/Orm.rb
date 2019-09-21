@@ -18,13 +18,21 @@ module Orm
     self.singleton_class.module_eval { attr_accessor :id }
     hash = {}
     get_columns.each do |column|
-      valor = self.send(column)
+      symbol = column[:named]
+      clase = column[:type]
+      valor = self.send(symbol)
       if valor
-        hash[column] = valor
+        valor_a_guardar = valor
+        if clase.respond_to?(:has_one)
+          valor.save!
+          valor_a_guardar = valor.id
+        else
+        end
+        hash[symbol] = valor_a_guardar
       end
     end
     @id = TADB::DB.table(get_table).insert(hash)
-    self.class.add_column(:id)
+    self.class.add_column({named: :id})
   end
 
   def resfresh!
@@ -34,7 +42,7 @@ module Orm
                        .select { |entry| entry[:id] === self.id }
                        .first
     get_columns.each do |column|
-      self.instance_variable_set("@#{column}", object_in_db[column])
+      self.instance_variable_set("@#{column[:named]}", object_in_db[column[:named]])
     end
   end
 
@@ -49,7 +57,7 @@ module Orm
       domain_object = self.class.new
       domain_object.singleton_class.module_eval { attr_accessor :id }
       get_columns.each do |column|
-        domain_object.instance_variable_set("@#{column}", entry[column])
+        domain_object.instance_variable_set("@#{column[:named]}", entry[column[:named]])
       end
       domain_object
     }
@@ -58,11 +66,12 @@ module Orm
   module ClassMethods
     attr_accessor :columns
 
-    def has_one(i, named:)
+    def has_one(type, named:)
       unless @columns
         @columns = []
       end
-      @columns.push(named)
+
+      @columns.push({'type': type, 'named': named})
       attr_accessor named
     end
 
@@ -84,8 +93,8 @@ module Orm
           objeto_de_dominio = self.new
           objeto_de_dominio.singleton_class.module_eval { attr_accessor :id }
           @columns.each do |column|
-            if entry[column]
-              objeto_de_dominio.instance_variable_set("@#{column}", entry[column])
+            if entry[column[:named]]
+              objeto_de_dominio.instance_variable_set("@#{column[:named]}", entry[column[:named]])
             end
           end
           objeto_de_dominio
