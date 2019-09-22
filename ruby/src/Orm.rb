@@ -45,11 +45,7 @@ module Orm
       valor = object_in_db[column[:named]]
       if clase.respond_to?(:has_one)
         id = valor
-        objeto_en_db = clase.find_by_id(id)
-        valor = clase.new
-        clase.columns.each { |columna|
-          valor.instance_variable_set("@#{columna[:named]}", objeto_en_db[columna[:named]])
-        }
+        valor = clase.obtener_objeto_de_dominio(id)
       end
       self.instance_variable_set("@#{column[:named]}", valor)
     end
@@ -88,6 +84,18 @@ module Orm
           .first
     end
 
+    def obtener_objeto_de_dominio (id)
+      objeto_db = self.find_by_id(id)
+      objeto = self.new
+      @columns.each { |columna|
+        atributo = columna[:named]
+        objeto.instance_variable_set("@#{atributo}", objeto_db[atributo])
+      }
+      objeto.singleton_class.module_eval { attr_accessor :id }
+      objeto.instance_variable_set("@id", objeto_db[:id])
+      objeto
+    end
+
     def get_table
       self.name.downcase
     end
@@ -101,16 +109,7 @@ module Orm
           clase = column[:type]
           if clase.respond_to?(:has_one)
             id = valor
-            valor = clase.new
-            objeto_en_db = clase.find_by_id(id)
-            clase.columns.each { |columna|
-              atributo = columna[:named]
-              valor.instance_variable_set("@#{atributo}", objeto_en_db[atributo])
-            }
-            valor.singleton_class.module_eval { attr_accessor :id }
-
-            valor.instance_variable_set("@id", objeto_en_db[:id])
-
+            valor = clase.obtener_objeto_de_dominio(id)
           end
           domain_object.instance_variable_set("@#{column[:named]}", valor)
         end
