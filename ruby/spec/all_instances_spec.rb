@@ -33,32 +33,53 @@ describe 'all_instances' do
     end
 
     context "y algunos de sus atributos representa una entidad" do
-      before do
-        class Teclado
-          include Orm
-          has_one String, named: :tipo
+      context "con una dependencia simple" do
+        before do
+          class Teclado
+            include Orm
+            has_one String, named: :tipo
+          end
+
+          class Computadora
+            has_one Teclado, named: :teclado
+          end
+
+          @teclado = Teclado.new
+          @teclado.tipo = "mecanico"
+          @teclado.save!
+          @computadora = Computadora.new
+          @computadora.teclado = @teclado
+          @computadora.save!
+
+          @all_instances = Computadora.all_instances
         end
 
-        class Computadora
-          has_one Teclado, named: :teclado
+        it 'y pedimos all_instances, nos devuelve los objetos de dominio' do
+          computadora_db = @all_instances[0]
+          expect(computadora_db.id).to eq(@computadora.id)
+          expect(computadora_db.teclado.id).to eq(@teclado.id)
+          expect(computadora_db.teclado.tipo).to eq(@teclado.tipo)
+        end
+      end
+
+      context "con una dependencia compuesta A -> B -> C" do
+        before do
+          @acero = Material.new
+          @acero.peso = "200"
+          @pala = Herramienta.new
+          @pala.material = @acero
+          @pepe = Obrero.new
+          @pepe.herramienta = @pala
+          @pepe.save!
         end
 
-        @teclado = Teclado.new
-        @teclado.tipo = "mecanico"
-        @teclado.save!
-        @computadora = Computadora.new
-        @computadora.teclado = @teclado
-        @computadora.save!
-
-        @all_instances = Computadora.all_instances
+        it 'y pedimos all_instances, nos devuelve los objetos de dominio' do
+          obrero_db = Obrero.all_instances[0]
+          expect(obrero_db.herramienta.material.id).to eq(@acero.id)
+          expect(obrero_db.herramienta.material.peso).to eq("200")
+        end
       end
 
-      it 'y pedimos all_instances, nos devuelve los objetos de dominio ' do
-        computadora_db = @all_instances[0]
-        expect(computadora_db.id).to eq(@computadora.id)
-        expect(computadora_db.teclado.id).to eq(@teclado.id)
-        expect(computadora_db.teclado.tipo).to eq(@teclado.tipo)
-      end
     end
 
   end

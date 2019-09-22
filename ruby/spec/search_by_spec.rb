@@ -72,30 +72,52 @@ describe 'search_by' do
       end
     end
     context 'y algun atributo hace referencia a otra entidad' do
-      before do
-        class Mascota
-          include Orm
-          has_one String, named: :tipo
-        end
-        class Persona
-          has_one Mascota, named: :mascota
+
+      context 'y se tiene una dependencia simple' do
+        before do
+          class Mascota
+            include Orm
+            has_one String, named: :tipo
+          end
+          class Persona
+            has_one Mascota, named: :mascota
+          end
+
+          @perro = Mascota.new
+          @perro.tipo = "perro"
+          @perro.save!
+          @gonza = Persona.new
+          @gonza.nombre = "Gonzalo gras cantou"
+          @gonza.mascota = @perro
+          @gonza.save!
         end
 
-        @perro = Mascota.new
-        @perro.tipo = "perro"
-        @perro.save!
-        @gonza = Persona.new
-        @gonza.nombre = "Gonzalo gras cantou"
-        @gonza.mascota = @perro
-        @gonza.save!
+        it 'tiene que mapear correctamente esa entidad' do
+          resultado = Persona.search_by_nombre("Gonzalo gras cantou")
+          mascota = resultado[0].mascota
+          expect(mascota.id).to eq(@perro.id)
+          expect(mascota.tipo).to eq(@perro.tipo)
+        end
+      end
+      context "con una dependencia compuesta A -> B -> C" do
+        before do
+          @acero = Material.new
+          @acero.peso = "200"
+          @pala = Herramienta.new
+          @pala.material = @acero
+          @pepe = Obrero.new
+          @pepe.nombre = "pepe"
+          @pepe.herramienta = @pala
+          @pepe.save!
+        end
+
+        it 'se mapean correctamente las entidades' do
+          obrero_db = Obrero.search_by_nombre("pepe")[0]
+          expect(obrero_db.herramienta.material.id).to eq(@acero.id)
+          expect(obrero_db.herramienta.material.peso).to eq("200")
+        end
       end
 
-      it 'tiene que mapear correctamente esa entidad' do
-        resultado = Persona.search_by_nombre("Gonzalo gras cantou")
-        mascota = resultado[0].mascota
-        expect(mascota.id).to eq(@perro.id)
-        expect(mascota.tipo).to eq(@perro.tipo)
-      end
     end
 
   end

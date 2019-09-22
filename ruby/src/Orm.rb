@@ -84,12 +84,18 @@ module Orm
           .first
     end
 
-    def obtener_objeto_de_dominio (id)
-      objeto_db = self.find_by_id(id)
+    def obtener_objeto_de_dominio(id, objeto_db_param = false) # TODO: pensar una mejor firma para este metodo
+      objeto_db = objeto_db_param || self.find_by_id(id)
       objeto = self.new
       @columns.each { |columna|
         atributo = columna[:named]
-        objeto.instance_variable_set("@#{atributo}", objeto_db[atributo])
+        clase = columna[:type]
+        valor = objeto_db[atributo]
+        if clase.respond_to?(:has_one)
+          id = valor
+          valor = clase.obtener_objeto_de_dominio(id)
+        end
+        objeto.instance_variable_set("@#{atributo}", valor)
       }
       objeto.singleton_class.module_eval { attr_accessor :id }
       objeto.instance_variable_set("@id", objeto_db[:id])
@@ -102,18 +108,7 @@ module Orm
 
     def all_instances
       TADB::DB.table(get_table).entries.map { |entry|
-        domain_object = self.new
-        domain_object.singleton_class.module_eval { attr_accessor :id }
-        domain_object.get_columns.each do |column|
-          valor = entry[column[:named]]
-          clase = column[:type]
-          if clase.respond_to?(:has_one)
-            id = valor
-            valor = clase.obtener_objeto_de_dominio(id)
-          end
-          domain_object.instance_variable_set("@#{column[:named]}", valor)
-        end
-        domain_object
+        self.obtener_objeto_de_dominio(entry[:id], entry)
       }
     end
 
