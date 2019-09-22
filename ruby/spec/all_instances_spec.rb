@@ -11,8 +11,7 @@ describe 'all_instances' do
 
   context 'cuando no hay ningun registro cargado' do
     it 'y pedimos all_instances, nos devuelve un array vacio' do
-      computadora = Computadora.new
-      expect(computadora.all_instances).to match_array([])
+      expect(Computadora.all_instances).to match_array([])
     end
   end
 
@@ -24,7 +23,7 @@ describe 'all_instances' do
       @computadora_2.save!
       @computadora_3 = Computadora.new
       @computadora_3.save!
-      @all_instances = @computadora_1.all_instances
+      @all_instances = Computadora.all_instances
 
     end
     it 'y pedimos all_instances, nos devuelve los objetos de dominio ' do

@@ -61,16 +61,6 @@ module Orm
     self.id = nil
   end
 
-  def all_instances
-    TADB::DB.table(get_table).entries.map { |entry|
-      domain_object = self.class.new
-      domain_object.singleton_class.module_eval { attr_accessor :id }
-      domain_object.get_columns.each do |column|
-        domain_object.instance_variable_set("@#{column[:named]}", entry[column[:named]])
-      end
-      domain_object
-    }
-  end
 
   module ClassMethods
     attr_accessor :columns
@@ -98,6 +88,21 @@ module Orm
           .first
     end
 
+    def get_table
+      self.name.downcase
+    end
+
+    def all_instances
+      TADB::DB.table(get_table).entries.map { |entry|
+        domain_object = self.new
+        domain_object.singleton_class.module_eval { attr_accessor :id }
+        domain_object.get_columns.each do |column|
+          domain_object.instance_variable_set("@#{column[:named]}", entry[column[:named]])
+        end
+        domain_object
+      }
+    end
+
     def method_missing(symbol, *args, &block)
       nombre_mensaje = symbol.to_s
       if nombre_mensaje.start_with?('search_by_')
@@ -105,20 +110,9 @@ module Orm
         if self.instance_method(mensaje).arity > 0
           raise "No se puede utilizar una propiedad que reciba argumentos"
         end
-        objetos_de_dominio = TADB::DB.table(self.name.downcase).entries.map do |entry|
-          objeto_de_dominio = self.new
-          objeto_de_dominio.singleton_class.module_eval { attr_accessor :id }
-          @columns.each do |column|
-            if entry[column[:named]]
-              objeto_de_dominio.instance_variable_set("@#{column[:named]}", entry[column[:named]])
-            end
-          end
-          objeto_de_dominio
-        end
-        objetos_de_dominio.select do |objeto_de_dominio|
+        all_instances.select do |objeto_de_dominio|
           objeto_de_dominio.send(mensaje) == args[0]
         end
-
       else
         super
       end
