@@ -97,7 +97,22 @@ module Orm
         domain_object = self.new
         domain_object.singleton_class.module_eval { attr_accessor :id }
         domain_object.get_columns.each do |column|
-          domain_object.instance_variable_set("@#{column[:named]}", entry[column[:named]])
+          valor = entry[column[:named]]
+          clase = column[:type]
+          if clase.respond_to?(:has_one)
+            id = valor
+            valor = clase.new
+            objeto_en_db = clase.find_by_id(id)
+            clase.columns.each { |columna|
+              atributo = columna[:named]
+              valor.instance_variable_set("@#{atributo}", objeto_en_db[atributo])
+            }
+            valor.singleton_class.module_eval { attr_accessor :id }
+
+            valor.instance_variable_set("@id", objeto_en_db[:id])
+
+          end
+          domain_object.instance_variable_set("@#{column[:named]}", valor)
         end
         domain_object
       }

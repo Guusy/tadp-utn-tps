@@ -29,22 +29,6 @@ describe 'search_by' do
     end
   end
 
-  context 'se busca por una condicion sobre un atributo y cumple con algun registro de la base' do
-    before do
-      @martin = Persona.new
-      @martin.nombre = "Martin Gonzalez"
-      @martin.save!
-      @gonza = Persona.new
-      @gonza.nombre = "Gonzalo gras cantou"
-      @gonza.save!
-    end
-    it 'se devuelven esos valores' do
-      resultado = Persona.search_by_nombre("Martin Gonzalez")
-      expect(resultado.size).to eq(1)
-      expect(resultado[0].id).to eq(@martin.id)
-    end
-  end
-
   context 'se busca por una condicion sobre un metodo con argumentos ' do
     it 'y falla con "No se puede utilizar una propiedad que reciba argumentos"' do
       expect { Persona.search_by_saludar }.to raise_exception("No se puede utilizar una propiedad que reciba argumentos")
@@ -69,5 +53,50 @@ describe 'search_by' do
       expect(resultado_false.size).to eq(1)
       expect(resultado_false[0].id).to eq(@gonza.id)
     end
+  end
+
+  context 'se busca por una condicion sobre un atributo y cumple con algun registro de la base' do
+    context 'y todos sus atributos son primitivos' do
+      before do
+        @martin = Persona.new
+        @martin.nombre = "Martin Gonzalez"
+        @martin.save!
+        @gonza = Persona.new
+        @gonza.nombre = "Gonzalo gras cantou"
+        @gonza.save!
+      end
+      it 'se devuelven esos valores' do
+        resultado = Persona.search_by_nombre("Martin Gonzalez")
+        expect(resultado.size).to eq(1)
+        expect(resultado[0].id).to eq(@martin.id)
+      end
+    end
+    context 'y algun atributo hace referencia a otra entidad' do
+      before do
+        class Mascota
+          include Orm
+          has_one String, named: :tipo
+        end
+        class Persona
+          has_one Mascota, named: :mascota
+        end
+
+        @perro = Mascota.new
+        @perro.tipo = "perro"
+        @perro.save!
+        @gonza = Persona.new
+        @gonza.nombre = "Gonzalo gras cantou"
+        @gonza.mascota = @perro
+        @gonza.save!
+      end
+
+      it 'tiene que mapear correctamente esa entidad' do
+        resultado = Persona.search_by_nombre("Gonzalo gras cantou")
+        mascota = resultado[0].mascota
+        expect(mascota.id).to eq(@perro.id)
+        expect(mascota.tipo).to eq(@perro.tipo)
+      end
+    end
+
   end
 end
