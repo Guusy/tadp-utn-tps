@@ -39,12 +39,19 @@ module Orm
 
   def resfresh!
     check_id
-    object_in_db = TADB::DB.table(get_table)
-                       .entries
-                       .select { |entry| entry[:id] === self.id }
-                       .first
+    object_in_db = self.class.find_by_id(self.id)
     get_columns.each do |column|
-      self.instance_variable_set("@#{column[:named]}", object_in_db[column[:named]])
+      clase = column[:type]
+      valor = object_in_db[column[:named]]
+      if clase.respond_to?(:has_one)
+        id = valor
+        objeto_en_db = clase.find_by_id(id)
+        valor = clase.new
+        clase.columns.each { |columna|
+          valor.instance_variable_set("@#{columna[:named]}", objeto_en_db[columna[:named]])
+        }
+      end
+      self.instance_variable_set("@#{column[:named]}", valor)
     end
   end
 
@@ -58,7 +65,7 @@ module Orm
     TADB::DB.table(get_table).entries.map { |entry|
       domain_object = self.class.new
       domain_object.singleton_class.module_eval { attr_accessor :id }
-      get_columns.each do |column|
+      domain_object.get_columns.each do |column|
         domain_object.instance_variable_set("@#{column[:named]}", entry[column[:named]])
       end
       domain_object
@@ -82,6 +89,13 @@ module Orm
         @columns = []
       end
       @columns.push(column)
+    end
+
+    def find_by_id(id)
+      TADB::DB.table(self.name.downcase)
+          .entries
+          .select { |entry| entry[:id] === id }
+          .first
     end
 
     def method_missing(symbol, *args, &block)
