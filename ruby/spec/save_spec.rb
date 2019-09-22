@@ -42,7 +42,7 @@ describe 'save' do
         has_one Notebook, named: :notebook
       end
     end
-    context "que aun no estan persistidos" do
+    context "que aun no estan persistidos y tienen una dependencia simple" do
       before do
         @notebook = Notebook.new
         @notebook.numero_serial = "213ACDE23"
@@ -62,24 +62,76 @@ describe 'save' do
       end
     end
 
-    context "que ya estan persistidos" do
+    context "que aun no estan persistidos y tienen una dependencia compuesta A->B->C" do
       before do
-        @notebook = Notebook.new
-        @notebook.numero_serial = "213ACDE23"
-        @notebook.save!
-        @programador = Programador.new
-        @programador.notebook = @notebook
-        @programador.save!
+        @acero = Material.new
+        @acero.peso = "200"
+        @pala = Herramienta.new
+        @pala.material = @acero
+        @pepe = Obrero.new
+        @pepe.nombre = "pepe"
+        @pepe.herramienta = @pala
+        @pepe.save!
       end
 
       it 'los atributos no primitivos se referencian con un id en la base de datos' do
-        programador_db = find_by_id('programador', @programador.id)
-        expect(programador_db[:notebook]).to eq(@notebook.id)
+        obrero_db = find_by_id('obrero', @pepe.id)
+        expect(obrero_db[:herramienta]).to eq(@pala.id)
+        herramienta_db = find_by_id('herramienta', @pala.id)
+        expect(herramienta_db[:material]).to eq(@acero.id)
       end
 
-      it 'no se persiste 2 veces el atributo referenciado' do
-        notebooks_db =  TADB::DB.table('notebook').entries
-        expect(notebooks_db.size).to eq(1)
+      it 'los atributos no primitivos se registran en sus respectivas base de datos' do
+        material_db = find_by_id('material', @acero.id)
+        expect(material_db[:peso]).to eq(@acero.peso)
+      end
+    end
+
+    context "que ya estan persistidos" do
+      context "con una referencia simple" do
+        before do
+          @notebook = Notebook.new
+          @notebook.numero_serial = "213ACDE23"
+          @notebook.save!
+          @programador = Programador.new
+          @programador.notebook = @notebook
+          @programador.save!
+        end
+
+        it 'los atributos no primitivos se referencian con un id en la base de datos' do
+          programador_db = find_by_id('programador', @programador.id)
+          expect(programador_db[:notebook]).to eq(@notebook.id)
+        end
+
+        it 'no se persiste 2 veces el atributo referenciado' do
+          notebooks_db =  TADB::DB.table('notebook').entries
+          expect(notebooks_db.size).to eq(1)
+        end
+      end
+
+      context "con una dependencia compuesta A->B->C" do
+        before do
+          @acero = Material.new
+          @acero.peso = "200"
+          @acero.save!
+          @pala = Herramienta.new
+          @pala.material = @acero
+          @pala.save!
+          @pepe = Obrero.new
+          @pepe.nombre = "pepe"
+          @pepe.herramienta = @pala
+          @pepe.save!
+        end
+
+        it 'no se persiste 2 veces los atributos referenciados' do
+          herramienta_db =  TADB::DB.table('herramienta').entries
+          expect(herramienta_db.size).to eq(1)
+          material_db =  TADB::DB.table('material').entries
+          expect(material_db.size).to eq(1)
+          obrero_db =  TADB::DB.table('obrero').entries
+          expect(obrero_db.size).to eq(1)
+        end
+
       end
     end
   end
