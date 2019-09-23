@@ -21,20 +21,34 @@ module Orm
       symbol = column[:named]
       clase = column[:type]
       valor = self.send(symbol)
-      if valor
+      if valor && !valor.is_a?(Array)
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
           unless valor.respond_to?(:id)
             valor.save!
           end
           valor_a_guardar = valor.id
-        else
         end
         hash[symbol] = valor_a_guardar
       end
     end
     @id = TADB::DB.table(get_table).insert(hash)
     self.class.add_column({named: :id})
+    principal_table = get_table
+    get_columns.each do |columna|
+      symbol = columna[:named]
+      clase = columna[:type]
+      valor = self.send(symbol)
+      if valor.is_a? Array
+        valor.each do |has_many_valor|
+          id = has_many_valor.save!
+          secondary_table = clase.get_table
+          has_many_hash = {"id_#{principal_table}": @id, "id_#{secondary_table}": id}
+          TADB::DB.table("#{principal_table}_#{secondary_table}").insert(has_many_hash)
+        end
+      end
+      return @id
+    end
   end
 
   def resfresh!
@@ -71,9 +85,21 @@ module Orm
       handle_columns
       @columns.push({'type': type, 'named': named})
       attr_accessor named
-      define_method(named) do
-        instance_variable_get("@#{named}") || []
-      end
+        # define_method(named) do
+        #   value_getter = instance_variable_get("@#{named}")
+        #   puts "la ocncha de tu viea"
+        #   puts "value_getter.nil?"
+        #   if value_getter.nil?
+        #     puts "i m nil"
+        #     return []
+        #   else
+        #     puts "hola"
+        #     return value_getter
+        #   end
+        # end
+        # define_method("#{named}=") do |value|
+        #   instance_variable_set("@#{named}", value)
+        # end
     end
 
     def add_column(column)
