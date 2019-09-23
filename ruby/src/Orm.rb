@@ -62,19 +62,29 @@ module Orm
     attr_accessor :columns
 
     def has_one(type, named:)
-      unless @columns
-        @columns = []
-      end
-
+      handle_columns
       @columns.push({'type': type, 'named': named})
       attr_accessor named
     end
 
+    def has_many(type, named:)
+      handle_columns
+      @columns.push({'type': type, 'named': named})
+      attr_accessor named
+      define_method(named) do
+        instance_variable_get("@#{named}") || []
+      end
+    end
+
     def add_column(column)
+      handle_columns
+      @columns.push(column)
+    end
+
+    def handle_columns
       unless @columns
         @columns = []
       end
-      @columns.push(column)
     end
 
     def find_by_id(id)
