@@ -76,12 +76,21 @@ module Orm
     attr_accessor :columns
 
     def has_one(type, named:)
+      columnas_de_superclase = []
+
+      if self.respond_to?(:superclass)
+        tiene_superclase_persistible = self.superclass.respond_to?(:has_one)
+        if tiene_superclase_persistible
+          columnas_de_superclase = (self.superclass.columns) ? self.superclass.columns : []
+        end
+      end
+
       modulos_persistibles_incluidos = included_modules.select do |x|
         x.respond_to?(:has_one)
       end
-      columnas_de_todos = modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns  }
+      columnas_de_todos = modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
       unless @columns
-        @columns = columnas_de_todos
+        @columns = columnas_de_todos + columnas_de_superclase
       end
       @columns.push({'type': type, 'named': named})
       attr_accessor named

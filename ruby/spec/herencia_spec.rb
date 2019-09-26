@@ -30,4 +30,33 @@ describe 'Herencia' do
       expect(patito_rojo_db[:tamanio]).to eq("chico")
     end
   end
+
+  context 'cuando se persiste una clase que hereda otra' do
+    before do
+      class Consola
+        include Orm
+        has_one String, named: :origen
+      end
+
+      class Ps4 < Consola
+        include Orm
+        has_one String, named: :compania
+      end
+
+      @ps4 = Ps4.new
+      @ps4.compania = "sony"
+      @ps4.origen = "china"
+      @ps4.save!
+    end
+
+    it 'se guardan todos los atributos en el objeto' do
+      expect(@ps4.compania).to eq("sony")
+      expect(@ps4.origen).to eq("china")
+    end
+    it 'se guardan todos los atributos en el mismo registro de la base de datos' do
+      ps4_db = find_by_id("ps4", @ps4.id)
+      expect(ps4_db[:compania]).to eq("sony")
+      expect(ps4_db[:origen]).to eq("china")
+    end
+  end
 end
