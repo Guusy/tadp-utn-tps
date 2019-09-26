@@ -76,7 +76,13 @@ module Orm
     attr_accessor :columns
 
     def has_one(type, named:)
-      handle_columns
+      modulos_persistibles_incluidos = included_modules.select do |x|
+        x.respond_to?(:has_one)
+      end
+      columnas_de_todos = modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns  }
+      unless @columns
+        @columns = columnas_de_todos
+      end
       @columns.push({'type': type, 'named': named})
       attr_accessor named
     end
@@ -85,21 +91,17 @@ module Orm
       handle_columns
       @columns.push({'type': type, 'named': named})
       attr_accessor named
-        # define_method(named) do
-        #   value_getter = instance_variable_get("@#{named}")
-        #   puts "la ocncha de tu viea"
-        #   puts "value_getter.nil?"
-        #   if value_getter.nil?
-        #     puts "i m nil"
-        #     return []
-        #   else
-        #     puts "hola"
-        #     return value_getter
-        #   end
-        # end
-        # define_method("#{named}=") do |value|
-        #   instance_variable_set("@#{named}", value)
-        # end
+      # define_method(named) do
+      #   value_getter = instance_variable_get("@#{named}")
+      #   if value_getter.nil?
+      #     return []
+      #   else
+      #     return value_getter
+      #   end
+      # end
+      # define_method("#{named}=") do |value|
+      #   instance_variable_set("@#{named}", value)
+      # end
     end
 
     def add_column(column)
