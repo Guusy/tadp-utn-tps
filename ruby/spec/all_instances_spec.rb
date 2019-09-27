@@ -84,5 +84,34 @@ describe 'all_instances' do
 
   end
 
+  context 'cuando le preguntas un all_instances a un modulo' do
+    before do
+      module Atacante
+        include Orm
+        has_one Numeric, named: :poder_ofensivo
+      end
+    end
+    context 'y esta incluido en una sola clase' do
+      before do
+        class Guerrero
+          include Orm
+          include Atacante
+          has_one String, named: :rango
+        end
+        @comandante =  Guerrero.new
+        @comandante.poder_ofensivo = 250
+        @comandante.rango = "comandante"
+        @comandante.save!
+      end
+
+      it 'responde con todas las instancias' do
+        guerrero_all_instances = Atacante.all_instances()[0]
+        expect(guerrero_all_instances.rango).to eq(@comandante.rango)
+        expect(guerrero_all_instances.poder_ofensivo).to eq(@comandante.poder_ofensivo)
+      end
+    end
+
+  end
+
 
 end

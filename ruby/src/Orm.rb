@@ -73,7 +73,27 @@ module Orm
 
 
   module ClassMethods
-    attr_accessor :columns
+    attr_accessor :columns, :descendientes
+
+    def include(*expected)
+      if expected[0].respond_to?(:has_one)
+        expected[0].agregar_descendiente(self)
+      end
+      super(*expected)
+    end
+
+    def agregar_descendiente(descendiente)
+      unless @descendientes
+        @descendientes = []
+      end
+      @descendientes.push(descendiente)
+    end
+
+    # def inherited(sub_class)
+    #   # Usar cuando tenemos herencia
+    #   puts sub_class
+    #   @sub_clases << sub_class
+    # end
 
     def has_one(type, named:)
       columnas_de_superclase = []
@@ -154,9 +174,14 @@ module Orm
     end
 
     def all_instances
-      TADB::DB.table(get_table).entries.map { |entry|
+      all_instances_descendientes = (@descendientes) ?
+                                        @descendientes.flat_map do |descendiente|
+                                          descendiente.all_instances()
+                                        end : []
+      all_instances_clase = TADB::DB.table(get_table).entries.map { |entry|
         self.obtener_objeto_de_dominio(entry[:id], entry)
       }
+      all_instances_clase + all_instances_descendientes
     end
 
     def method_missing(symbol, *args, &block)
