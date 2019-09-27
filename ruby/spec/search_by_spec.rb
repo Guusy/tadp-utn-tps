@@ -164,5 +164,27 @@ describe 'search_by' do
         expect { Teclado.search_by_teclas_extras(12) }.to raise_error("No todos entienden teclas_extras !")
       end
     end
+
+    context 'y todas las partes entienden el mensaje' do
+      before do
+        @teclado_noga = Teclado.new
+        @teclado_noga.cantidad_teclas = 60
+        @teclado_noga.save!
+        @razer = TecladoMecanico.new
+        @razer.teclas_extras = 20
+        @razer.cantidad_teclas = 60
+        @razer.save!
+      end
+      it 'se devuelve todas las entidades que matchean con la busqueda' do
+        teclado_find_by = Teclado.search_by_cantidad_teclas(60)
+        teclado_noga = teclado_find_by[0]
+        teclado_razer = teclado_find_by[1]
+
+        expect(teclado_noga.id).to eq @teclado_noga.id
+        expect(teclado_noga.cantidad_teclas).to eq @teclado_noga.cantidad_teclas
+        expect(teclado_razer.id).to eq @razer.id
+        expect(teclado_razer.cantidad_teclas).to eq @razer.cantidad_teclas
+      end
+    end
   end
 end
