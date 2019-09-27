@@ -188,6 +188,7 @@ module Orm
       nombre_mensaje = symbol.to_s
       if nombre_mensaje.start_with?('search_by_')
         mensaje = nombre_mensaje.gsub('search_by_', '').to_sym
+        validar_su_objeto_si_responde_a(self, mensaje)
         if self.instance_method(mensaje).arity > 0
           raise "No se puede utilizar una propiedad que reciba argumentos"
         end
@@ -196,6 +197,12 @@ module Orm
         end
       else
         super
+      end
+    end
+
+    def validar_su_objeto_si_responde_a(entidad, mensaje)
+      unless entidad.method_defined?(mensaje)
+        raise "No todos entienden #{mensaje} !"
       end
     end
   end

@@ -139,10 +139,30 @@ describe 'search_by' do
       @guitarra.save!
     end
 
-    it 'debe devolver los objetos que cumplan la condicion' do
-      resultado = Instrumento.search_by_material("madera")
-      expect(resultado.size).to eq(1)
-      expect(resultado[0].id).to eq(@guitarra.id)
+    context 'y todas las partes entienden el mensaje' do
+      it 'debe devolver los objetos que cumplan la condicion' do
+        resultado = Instrumento.search_by_material("madera")
+        expect(resultado.size).to eq(1)
+        expect(resultado[0].id).to eq(@guitarra.id)
+      end
+    end
+  end
+
+  context 'cuando se busca en una clase la cual es heredada por otras' do
+    before do
+      class Teclado
+        include Orm
+        has_one Numeric, named: :cantidad_teclas
+      end
+      class TecladoMecanico < Teclado
+        include Orm
+        has_one Numeric, named: :teclas_extras
+      end
+    end
+    context 'y NO todas las partes entienden el mensaje' do
+      it 'se debe lanzar un error "No todos entienden [NOMBRE_MENSAJE] !"' do
+        expect { Teclado.search_by_teclas_extras(12) }.to raise_error("No todos entienden teclas_extras !")
+      end
     end
   end
 end
