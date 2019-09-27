@@ -68,6 +68,28 @@ describe 'validate' do
     end
   end
 
+  context 'cuando se trata de persistir un atributo con has_many' do
+    before do
+      class Hijo
+        include Orm
+        has_one String, named: :nombre
+      end
+      class Madre
+        include Orm
+        has_many Hijo, named: :hijos
+      end
+    end
+    context 'con un primitivo' do
+      before do
+        @madre = Madre.new
+        @madre.hijos = "hola"
+      end
+
+      it 'falla con "El [ATRIBUTO] no es un Array! valor actual : [VALOR_ACTUAL]"' do
+        expect { @madre.save! }.to raise_error("El hijos no es un Array! valor actual : hola")
+      end
+    end
+  end
 
 
 end

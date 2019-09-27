@@ -14,17 +14,36 @@ module Orm
     end
   end
 
+  def validate!
+    get_columns.each do |columna|
+      symbol = columna[:named]
+      clase = columna[:type]
+      has_many = columna[:has_many]
+      valor = self.send(symbol)
+      if valor
+        if has_many
+          if valor.class != Array
+            raise "El #{symbol} no es un Array! valor actual : #{valor}"
+          end
+        else
+          if clase != valor.class && !(valor.class < clase)
+            raise "El #{symbol} no es un #{clase}! valor actual : #{valor}"
+          end
+        end
+
+      end
+    end
+  end
+
   def save!
     self.singleton_class.module_eval { attr_accessor :id }
     hash = {}
+    validate!
     get_columns.each do |column|
       symbol = column[:named]
       clase = column[:type]
       valor = self.send(symbol)
       if valor && !valor.is_a?(Array)
-        if clase != valor.class && !(valor.class < clase)
-          raise "El #{symbol} no es un #{clase}! valor actual : #{valor}"
-        end
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
           unless valor.respond_to?(:id)
@@ -115,13 +134,13 @@ module Orm
       unless @columns
         @columns = columnas_de_todos + columnas_de_superclase
       end
-      @columns.push({'type': type, 'named': named})
+      @columns.push({'type': type, 'named': named, has_many: false})
       attr_accessor named
     end
 
     def has_many(type, named:)
       handle_columns
-      @columns.push({'type': type, 'named': named})
+      @columns.push({'type': type, 'named': named, has_many: true})
       attr_accessor named
       # define_method(named) do
       #   value_getter = instance_variable_get("@#{named}")
