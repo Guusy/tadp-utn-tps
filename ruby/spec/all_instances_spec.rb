@@ -142,5 +142,34 @@ describe 'all_instances' do
 
   end
 
+  context 'cuando le preguntas all_instances a una clase la cual tiene subclases' do
+    before do
+      class Guerrero
+        include Orm
+        has_one Numeric, named: :poder_ofensivo
+      end
+      class Espadachin < Guerrero
+        include Orm
+        has_one String, named: :rango
+      end
+      @guerrero_fuerte = Guerrero.new
+      @guerrero_fuerte.poder_ofensivo = 1000
+      @guerrero_fuerte.save!
+
+      @capitan_espadachin = Espadachin.new
+      @capitan_espadachin.rango = "capitan"
+      @capitan_espadachin.save!
+    end
+
+    it 'te devuelve sus propias instancias y las de las subclases' do
+      guerrero_espadachin_all_instances = Guerrero.all_instances
+      guerero = guerrero_espadachin_all_instances[0]
+      espadachin = guerrero_espadachin_all_instances[1]
+      expect(guerero.id).to eq(@guerrero_fuerte.id)
+      expect(guerero.poder_ofensivo).to eq(@guerrero_fuerte.poder_ofensivo)
+      expect(espadachin.id).to eq(@capitan_espadachin.id)
+      expect(espadachin.rango).to eq(@capitan_espadachin.rango)
+    end
+  end
 
 end

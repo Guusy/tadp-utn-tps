@@ -84,18 +84,16 @@ module Orm
       super(*includes)
     end
 
+    def inherited(sub_clase)
+      self.agregar_descendiente(sub_clase)
+    end
+
     def agregar_descendiente(descendiente)
       unless @descendientes
         @descendientes = []
       end
       @descendientes.push(descendiente)
     end
-
-    # def inherited(sub_class)
-    #   # Usar cuando tenemos herencia
-    #   puts sub_class
-    #   @sub_clases << sub_class
-    # end
 
     def has_one(type, named:)
       columnas_de_superclase = []
