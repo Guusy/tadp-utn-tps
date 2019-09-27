@@ -22,6 +22,9 @@ module Orm
       clase = column[:type]
       valor = self.send(symbol)
       if valor && !valor.is_a?(Array)
+        if clase != valor.class && !(valor.class < clase)
+          raise "El #{symbol} no es un #{clase}! valor actual : #{valor}"
+        end
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
           unless valor.respond_to?(:id)
