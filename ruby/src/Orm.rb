@@ -75,11 +75,13 @@ module Orm
   module ClassMethods
     attr_accessor :columns, :descendientes
 
-    def include(*expected)
-      if expected[0].respond_to?(:has_one)
-        expected[0].agregar_descendiente(self)
+    def include(*includes)
+      includes.each do |include|
+        if include.respond_to?(:has_one)
+          include.agregar_descendiente(self)
+        end
       end
-      super(*expected)
+      super(*includes)
     end
 
     def agregar_descendiente(descendiente)

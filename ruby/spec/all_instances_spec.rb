@@ -98,7 +98,7 @@ describe 'all_instances' do
           include Atacante
           has_one String, named: :rango
         end
-        @comandante =  Guerrero.new
+        @comandante = Guerrero.new
         @comandante.poder_ofensivo = 250
         @comandante.rango = "comandante"
         @comandante.save!
@@ -108,6 +108,35 @@ describe 'all_instances' do
         guerrero_all_instances = Atacante.all_instances()[0]
         expect(guerrero_all_instances.rango).to eq(@comandante.rango)
         expect(guerrero_all_instances.poder_ofensivo).to eq(@comandante.poder_ofensivo)
+      end
+    end
+
+    context 'y esta incluido en varias clases' do
+      before do
+        class Muralla
+          include Orm
+          include Atacante
+          has_one String, named: :alto
+        end
+        class Cohete
+          include Orm
+          include Atacante
+          has_one String, named: :tipo_nafta
+        end
+        @muralla_china = Muralla.new
+        @muralla_china.alto = "1000m"
+        @muralla_china.save!
+        @cohete = Cohete.new
+        @cohete.tipo_nafta = "gnc"
+        @cohete.save!
+      end
+
+      it 'responde con todas las instancias' do
+        muralla_cohete_all_instances = Atacante.all_instances
+        muralla = muralla_cohete_all_instances[0]
+        cohete = muralla_cohete_all_instances[1]
+        expect(muralla.alto).to eq(@muralla_china.alto)
+        expect(cohete.tipo_nafta).to eq(@cohete.tipo_nafta)
       end
     end
 
