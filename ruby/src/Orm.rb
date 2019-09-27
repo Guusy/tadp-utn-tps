@@ -176,7 +176,7 @@ module Orm
     def all_instances
       all_instances_descendientes = (@descendientes) ?
                                         @descendientes.flat_map do |descendiente|
-                                          descendiente.all_instances()
+                                          descendiente.all_instances
                                         end : []
       all_instances_clase = TADB::DB.table(get_table).entries.map { |entry|
         self.obtener_objeto_de_dominio(entry[:id], entry)

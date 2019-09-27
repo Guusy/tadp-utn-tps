@@ -121,4 +121,28 @@ describe 'search_by' do
     end
 
   end
+
+  context 'cuando se busca sobre un modulo el cual es incluido por otras clases' do
+    before do
+      module Instrumento
+        include Orm
+        has_one String, named: :material
+      end
+      class Guitarra
+        include Orm
+        include Instrumento
+        has_one Numeric, named: :cantidad_cuerdas
+      end
+      @guitarra = Guitarra.new
+      @guitarra.material = "madera"
+      @guitarra.cantidad_cuerdas = 6
+      @guitarra.save!
+    end
+
+    it 'debe devolver los objetos que cumplan la condicion' do
+      resultado = Instrumento.search_by_material("madera")
+      expect(resultado.size).to eq(1)
+      expect(resultado[0].id).to eq(@guitarra.id)
+    end
+  end
 end
