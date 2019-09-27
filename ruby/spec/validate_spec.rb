@@ -89,6 +89,20 @@ describe 'validate' do
         expect { @madre.save! }.to raise_error("El hijos no es un Array! valor actual : hola")
       end
     end
+
+    context 'que cumple que sea un array' do
+      context 'pero los atributos de adentro no cumplen con el tipo especificado' do
+        before do
+          @madre = Madre.new
+          @madre.hijos = []
+          @madre.hijos.push(Obrero.new)
+        end
+
+        it 'falla con "El [ATRIBUTO] no es un [TIPO]! valor actual : [VALOR_ACTUAL]"' do
+          expect { @madre.save! }.to raise_error("El hijos no es un Hijo! valor actual : Obrero")
+        end
+      end
+    end
   end
 
 

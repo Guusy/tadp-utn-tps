@@ -25,6 +25,11 @@ module Orm
           if valor.class != Array
             raise "El #{symbol} no es un Array! valor actual : #{valor}"
           end
+          valor.each do |hijo|
+            if hijo.class != clase
+              raise "El #{symbol} no es un #{clase}! valor actual : #{hijo.class}"
+            end
+          end
         else
           if clase != valor.class && !(valor.class < clase)
             raise "El #{symbol} no es un #{clase}! valor actual : #{valor}"
