@@ -23,21 +23,25 @@ module Orm
       if valor
         if has_many
           if valor.class != Array
-            raise "El #{symbol} no es un Array! valor actual : #{valor}"
+            raise mensaje_error_de_tipos(self.class, symbol, "Array", valor)
           end
           valor.each do |hijo|
             if hijo.class != clase
-              raise "El #{symbol} no es un #{clase}! valor actual : #{hijo.class}"
+              raise mensaje_error_de_tipos(self.class, symbol, clase, hijo.class)
             end
           end
         else
           if clase != valor.class && !(valor.class < clase)
-            raise "El #{symbol} no es un #{clase}! valor actual : #{valor}"
+            raise mensaje_error_de_tipos(self.class, symbol, clase, valor)
           end
         end
 
       end
     end
+  end
+
+  def mensaje_error_de_tipos(clase_base, atributo, clase_esperada, valor)
+    "En #{clase_base} el atributo #{atributo} no es un #{clase_esperada}! valor actual : #{valor}"
   end
 
   def save!

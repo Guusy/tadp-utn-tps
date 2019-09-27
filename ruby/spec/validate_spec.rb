@@ -13,8 +13,8 @@ describe 'validate' do
       @pepita = Pepita.new
       @pepita.nombre = 21312948
     end
-    it 'deberia fallar con "El [ATRIBUTO] no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
-      expect { @pepita.save! }.to raise_error("El nombre no es un String! valor actual : 21312948")
+    it 'deberia fallar con " no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+      expect { @pepita.save! }.to raise_error("En Pepita el atributo nombre no es un String! valor actual : 21312948")
     end
   end
   context 'cuando se trata de persistir atributo que es Numeric con un string' do
@@ -26,8 +26,8 @@ describe 'validate' do
       @contador = Contador.new
       @contador.acumulador = "sadasdasda"
     end
-    it 'falla con "El [ATRIBUTO] no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
-      expect { @contador.save! }.to raise_error("El acumulador no es un Numeric! valor actual : sadasdasda")
+    it 'falla con "En [CLASE] el atributo no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+      expect { @contador.save! }.to raise_error("En Contador el atributo acumulador no es un Numeric! valor actual : sadasdasda")
     end
   end
 
@@ -49,8 +49,8 @@ describe 'validate' do
         @edificio.portero = "hola"
       end
 
-      it 'falla con "El [ATRIBUTO] no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
-        expect { @edificio.save! }.to raise_error("El portero no es un Portero! valor actual : hola")
+      it 'falla con "En [CLASE] el atributo no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+        expect { @edificio.save! }.to raise_error("En Edificio el atributo portero no es un Portero! valor actual : hola")
       end
     end
 
@@ -62,8 +62,8 @@ describe 'validate' do
         @edificio.portero = @portero
       end
 
-      it 'falla con "El [ATRIBUTO] no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
-        expect { @edificio.save! }.to raise_error("El edad no es un Numeric! valor actual : teclado")
+      it 'falla con "En [CLASE] el atributo no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+        expect { @edificio.save! }.to raise_error("En Portero el atributo edad no es un Numeric! valor actual : teclado")
       end
     end
   end
@@ -85,8 +85,8 @@ describe 'validate' do
         @madre.hijos = "hola"
       end
 
-      it 'falla con "El [ATRIBUTO] no es un Array! valor actual : [VALOR_ACTUAL]"' do
-        expect { @madre.save! }.to raise_error("El hijos no es un Array! valor actual : hola")
+      it 'falla con "En [CLASE] el atributo [ATRIBUTO] no es un Array! valor actual : [VALOR_ACTUAL]"' do
+        expect { @madre.save! }.to raise_error("En Madre el atributo hijos no es un Array! valor actual : hola")
       end
     end
 
@@ -98,8 +98,22 @@ describe 'validate' do
           @madre.hijos.push(Obrero.new)
         end
 
-        it 'falla con "El [ATRIBUTO] no es un [TIPO]! valor actual : [VALOR_ACTUAL]"' do
-          expect { @madre.save! }.to raise_error("El hijos no es un Hijo! valor actual : Obrero")
+        it 'falla con "En [CLASE] el atributo no es un [TIPO]! valor actual : [VALOR_ACTUAL]"' do
+          expect { @madre.save! }.to raise_error("En Madre el atributo hijos no es un Hijo! valor actual : Obrero")
+        end
+      end
+
+      context 'pero los atributos de adentro tienen atributos invalidos' do
+        before do
+          @madre = Madre.new
+          @madre.hijos = []
+          @hijo = Hijo.new
+          @hijo.nombre = 213123
+          @madre.hijos.push(@hijo)
+        end
+
+        it 'falla con "En [CLASE] el atributo no es un [TIPO]! valor actual : [VALOR_ACTUAL]"' do
+          expect { @madre.save! }.to raise_error("En Hijo el atributo nombre no es un String! valor actual : 213123")
         end
       end
     end
