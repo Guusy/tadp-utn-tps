@@ -22,15 +22,13 @@ module Orm
       no_blank = columna[:no_blank]
       valor = self.send(atributo)
       if no_blank
-        if clase == Boolean
-          if valor.nil?
-            raise mensaje_error_vacio(atributo)
-          end
-        end
         if clase == String
           if valor.empty?
             raise mensaje_error_vacio(atributo)
           end
+        end
+        if valor.nil?
+          raise mensaje_error_vacio(atributo)
         end
       end
       if valor
