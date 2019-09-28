@@ -20,6 +20,7 @@ module Orm
       clase = columna[:type]
       has_many = columna[:has_many]
       no_blank = columna[:no_blank]
+      from = columna[:from]
       valor = self.send(atributo)
       if no_blank
         if clase == String
@@ -29,6 +30,11 @@ module Orm
         end
         if valor.nil?
           raise mensaje_error_vacio(atributo)
+        end
+      end
+      if from
+        if valor < from
+          raise mensaje_error_menor(atributo, from, valor)
         end
       end
       if valor
@@ -49,6 +55,10 @@ module Orm
 
       end
     end
+  end
+
+  def mensaje_error_menor(atributo, valor_esperado, valor_actual)
+    "El atributo #{atributo} es menor a #{valor_esperado}, valor actual : #{valor_actual}"
   end
 
   def mensaje_error_vacio(propiedad)
