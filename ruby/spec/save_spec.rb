@@ -9,11 +9,13 @@ describe 'save' do
         has_one String, named: :nombre
         has_one String, named: :apellido
         has_one Boolean, named: :es_enojon
+        has_one Boolean, named: :es_inteligente
         attr_accessor :valor_no_persistido
       end
       @persona = Persona.new
       @persona.nombre = "Gonzalo gras cantou"
       @persona.es_enojon = true
+      @persona.es_inteligente = false
       @persona.save!
       @persona_db = find_by_id("persona", @persona.id)
     end
@@ -24,6 +26,7 @@ describe 'save' do
     it 'Agrega el objeto a la DB con los datos marcados como persistibles' do
       expect(@persona_db[:nombre]).to eq @persona.nombre
       expect(@persona_db[:es_enojon]).to eq @persona.es_enojon
+      expect(@persona_db[:es_inteligente]).to eq @persona.es_inteligente
     end
 
     it 'no agrega los atributos a la DB que no fueron marcados como persistibles' do

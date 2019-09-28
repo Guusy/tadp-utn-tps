@@ -2,6 +2,7 @@ describe 'all_instances' do
   before do
     class Computadora
       include Orm
+      has_one Boolean, named: :gamer
     end
   end
 
@@ -20,15 +21,21 @@ describe 'all_instances' do
     context "y todos sus atributos son primitivos" do
       before do
         @computadora_1 = Computadora.new
+        @computadora_1.gamer = true
         @computadora_1.save!
         @computadora_2 = Computadora.new
+        @computadora_2.gamer = false
         @computadora_2.save!
         @all_instances = Computadora.all_instances
 
       end
       it 'y pedimos all_instances, nos devuelve los objetos de dominio ' do
-        expect(@all_instances[0].id).to eq(@computadora_1.id)
-        expect(@all_instances[1].id).to eq(@computadora_2.id)
+        computadora_1_db = @all_instances[0]
+        computadora_2_db = @all_instances[1]
+        expect(computadora_1_db.id).to eq(@computadora_1.id)
+        expect(computadora_1_db.gamer).to eq(@computadora_1.gamer)
+        expect(computadora_2_db.id).to eq(@computadora_2.id)
+        expect(computadora_2_db.gamer).to eq(@computadora_2.gamer)
       end
     end
 

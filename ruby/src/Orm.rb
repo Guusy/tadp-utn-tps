@@ -52,7 +52,7 @@ module Orm
       symbol = column[:named]
       clase = column[:type]
       valor = self.send(symbol)
-      if valor && !valor.is_a?(Array)
+      if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
           unless valor.respond_to?(:id)
