@@ -58,5 +58,20 @@ describe 'Herencia' do
       expect(ps4_db[:compania]).to eq("sony")
       expect(ps4_db[:origen]).to eq("china")
     end
+    context 'y una property de la subclase pisa una de super clase' do
+      before do
+        class Xbox < Consola
+          include Orm
+          has_one Numeric, named: :origen
+        end
+        @xbox = Xbox.new
+        @xbox.origen = 1235
+        @xbox.save!
+      end
+      it 'se guardan todos los atributos en el mismo registro de la base de datos' do
+        xbox_db = find_by_id("xbox", @xbox.id)
+        expect(xbox_db[:origen]).to eq(1235)
+      end
+    end
   end
 end
