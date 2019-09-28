@@ -8,10 +8,12 @@ describe 'save' do
         include Orm
         has_one String, named: :nombre
         has_one String, named: :apellido
+        has_one Boolean, named: :es_enojon
         attr_accessor :valor_no_persistido
       end
       @persona = Persona.new
       @persona.nombre = "Gonzalo gras cantou"
+      @persona.es_enojon = true
       @persona.save!
       @persona_db = find_by_id("persona", @persona.id)
     end
@@ -21,6 +23,7 @@ describe 'save' do
 
     it 'Agrega el objeto a la DB con los datos marcados como persistibles' do
       expect(@persona_db[:nombre]).to eq @persona.nombre
+      expect(@persona_db[:es_enojon]).to eq @persona.es_enojon
     end
 
     it 'no agrega los atributos a la DB que no fueron marcados como persistibles' do
@@ -30,6 +33,7 @@ describe 'save' do
     it 'se ignoran los attributos que no tienen valor' do
       expect(@persona_db[:apellido]).to eq nil
     end
+
   end
   context 'cuando se ejecuta en un objeto no persistido que tiene atributos no primitivos (otras clases) ' do
     before do

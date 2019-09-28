@@ -22,16 +22,16 @@ module Orm
       valor = self.send(symbol)
       if valor
         if has_many
-          if valor.class != Array
+          unless valor.is_a?(Array)
             raise mensaje_error_de_tipos(self.class, symbol, "Array", valor)
           end
           valor.each do |hijo|
-            if hijo.class != clase
+            unless hijo.is_a?(clase)
               raise mensaje_error_de_tipos(self.class, symbol, clase, hijo.class)
             end
           end
         else
-          if clase != valor.class && !(valor.class < clase)
+          unless valor.is_a?(clase)
             raise mensaje_error_de_tipos(self.class, symbol, clase, valor)
           end
         end

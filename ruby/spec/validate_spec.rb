@@ -13,10 +13,39 @@ describe 'validate' do
       @pepita = Pepita.new
       @pepita.nombre = 21312948
     end
-    it 'deberia fallar con " no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+    it 'deberia fallar con "En [CLASE] el atributo no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
       expect { @pepita.save! }.to raise_error("En Pepita el atributo nombre no es un String! valor actual : 21312948")
     end
   end
+  context 'cuando se tiene un atributo booleano' do
+    before do
+      class Camara
+        include Orm
+        has_one Boolean, named: :es_profesional
+      end
+    end
+    context 'y se trata de persistir con un numero' do
+      before do
+        @camara_profesional = Camara.new
+        @camara_profesional.es_profesional = 21312948
+      end
+      it 'deberia fallar con "En [CLASE] el atributo  no es un [TIPO_ESPERADO]! valor actual : [VALOR_ACTUAL]"' do
+        expect { @camara_profesional.save! }.to raise_error("En Camara el atributo es_profesional no es un Boolean! valor actual : 21312948")
+      end
+    end
+
+    context 'y se trata de persistir con un booleano' do
+      before do
+        @camara_profesional = Camara.new
+        @camara_profesional.es_profesional = true
+      end
+      it 'NO falla la validacion' do
+        expect { @camara_profesional.save! }.not_to raise_error
+      end
+    end
+  end
+
+
   context 'cuando se trata de persistir atributo que es Numeric con un string' do
     before do
       class Contador
