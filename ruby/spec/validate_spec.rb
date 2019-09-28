@@ -148,5 +148,21 @@ describe 'validate' do
     end
   end
 
+  context 'cuando una propiedad es declarada 2 veces' do
+    before do
+      class Libro
+        include Orm
+        has_one Numeric, named: :titulo
+        has_one String, named: :titulo
+      end
+      @el_principito = Libro.new
+      @el_principito.titulo = 123124
+    end
+
+    it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
+      expect { @el_principito.save! }.to raise_error("En Libro el atributo titulo no es un String! valor actual : 123124")
+    end
+
+  end
 
 end

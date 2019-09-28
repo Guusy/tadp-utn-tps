@@ -184,4 +184,23 @@ describe 'save' do
       end
     end
   end
+
+  context 'cuando una propiedad es declarada 2 veces' do
+    before do
+      class Libro
+        include Orm
+        has_one Numeric, named: :titulo
+        has_one String, named: :titulo
+      end
+      @el_principito = Libro.new
+      @el_principito.titulo = "titulo"
+      @el_principito.save!
+    end
+
+    it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
+      principito_db = find_by_id('libro', @el_principito.id)
+      expect(principito_db[:titulo]).to eq(@el_principito.titulo)
+    end
+
+  end
 end

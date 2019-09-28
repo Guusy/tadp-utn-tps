@@ -143,12 +143,14 @@ module Orm
       unless @columns
         @columns = columnas_de_todos + columnas_de_superclase
       end
-      @columns.push({'type': type, 'named': named, has_many: false})
+      # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
+      add_column({'type': type, 'named': named, has_many: false})
       attr_accessor named
     end
 
     def has_many(type, named:)
       handle_columns
+      # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
       @columns.push({'type': type, 'named': named, has_many: true})
       attr_accessor named
       # define_method(named) do
@@ -164,9 +166,20 @@ module Orm
       # end
     end
 
-    def add_column(column)
+    def add_column(nueva_columna)
       handle_columns
-      @columns.push(column)
+      hubo_reemplazo = false
+      @columns = @columns.map { |columna|
+        if columna[:named] == nueva_columna[:named]
+          hubo_reemplazo = true
+          nueva_columna
+        else
+          columna
+        end
+      }
+      unless hubo_reemplazo
+        @columns.push(nueva_columna)
+      end
     end
 
     def handle_columns
