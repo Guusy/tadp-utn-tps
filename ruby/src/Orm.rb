@@ -16,28 +16,45 @@ module Orm
 
   def validate!
     get_columns.each do |columna|
-      symbol = columna[:named]
+      atributo = columna[:named]
       clase = columna[:type]
       has_many = columna[:has_many]
-      valor = self.send(symbol)
+      no_blank = columna[:no_blank]
+      valor = self.send(atributo)
+      if no_blank
+        if clase == Boolean
+          if valor.nil?
+            raise mensaje_error_vacio(atributo)
+          end
+        end
+        if clase == String
+          if valor.empty?
+            raise mensaje_error_vacio(atributo)
+          end
+        end
+      end
       if valor
         if has_many
           unless valor.is_a?(Array)
-            raise mensaje_error_de_tipos(self.class, symbol, "Array", valor)
+            raise mensaje_error_de_tipos(self.class, atributo, "Array", valor)
           end
           valor.each do |hijo|
             unless hijo.is_a?(clase)
-              raise mensaje_error_de_tipos(self.class, symbol, clase, hijo.class)
+              raise mensaje_error_de_tipos(self.class, atributo, clase, hijo.class)
             end
           end
         else
           unless valor.is_a?(clase)
-            raise mensaje_error_de_tipos(self.class, symbol, clase, valor)
+            raise mensaje_error_de_tipos(self.class, atributo, clase, valor)
           end
         end
 
       end
     end
+  end
+
+  def mensaje_error_vacio(propiedad)
+    "El atributo #{propiedad} esta vacio!"
   end
 
   def mensaje_error_de_tipos(clase_base, atributo, clase_esperada, valor)
@@ -126,7 +143,7 @@ module Orm
       @descendientes.push(descendiente)
     end
 
-    def has_one(type, named:)
+    def has_one(type, named:, **parametros_opcionales)
       columnas_de_superclase = []
 
       if self.respond_to?(:superclass)
@@ -144,7 +161,7 @@ module Orm
         @columns = columnas_de_todos + columnas_de_superclase
       end
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
-      add_column({'type': type, 'named': named, has_many: false})
+      add_column({'type': type, 'named': named, has_many: false}.merge(parametros_opcionales))
       attr_accessor named
     end
 
