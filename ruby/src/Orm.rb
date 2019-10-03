@@ -24,7 +24,13 @@ module Orm
       no_blank = columna[:no_blank]
       from = columna[:from]
       to = columna[:to]
+      validacion = columna[:validate]
       valor = self.send(atributo)
+      if validacion
+        unless validacion.call(valor)
+          raise "El atributo #{atributo} no cumple la validacion"
+        end
+      end
       if no_blank
         if clase == String
           if valor.empty?
