@@ -1,4 +1,6 @@
 require 'tadb'
+
+# agregar mensaje id :D
 module Orm
   def get_table
     self.class.name.downcase
@@ -141,6 +143,7 @@ module Orm
   module ClassMethods
     attr_accessor :columns, :descendientes
 
+    # buscar oninclude o included (Hook)
     def include(*includes)
       includes.each do |include|
         if include.respond_to?(:has_one)
@@ -172,9 +175,10 @@ module Orm
       end
 
       modulos_persistibles_incluidos = included_modules.select do |x|
-        x.respond_to?(:has_one)
+        x.respond_to?(:has_one) ## distinguir pot orm
       end
       columnas_de_todos = modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
+      # NTH :  revisar
       unless @columns
         @columns = columnas_de_todos + columnas_de_superclase
       end
@@ -186,8 +190,12 @@ module Orm
     def has_many(type, named:)
       handle_columns
       # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
+      # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
+      # nice to have :D
       @columns.push({'type': type, 'named': named, has_many: true})
       attr_accessor named
+      # pisar initialize
+
       # define_method(named) do
       #   value_getter = instance_variable_get("@#{named}")
       #   if value_getter.nil?

@@ -50,4 +50,5 @@ describe 'no_blank' do
   end
 
   # TODO: preguntar que onda con los arrays vacios ?
+  # No deberia fallar en caso de []
 end

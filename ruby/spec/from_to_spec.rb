@@ -5,6 +5,7 @@ describe 'from y to' do
     TADB::DB.clear_all
   end
   # TODO : preguntar, que pasa si le declaramos un from y to a una array/String/Boolean ?  hay que fallar ?
+  # Fallar
   # Existen los numbers ? no deberian ser numeric ?
   context 'cuando se le declara from' do
     before do

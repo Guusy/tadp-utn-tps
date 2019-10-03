@@ -2,7 +2,6 @@ describe 'validate' do
   after do
     TADB::DB.clear_all
   end
-  # TODO :  preguntar que onda con los atributos nil  ?  deberia explotar todo ?
 
   context 'cuando se trata de persistir atributo que es String con un numero' do
     before do
