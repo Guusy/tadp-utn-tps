@@ -194,19 +194,9 @@ module Orm
       # nice to have :D
       @columns.push({'type': type, 'named': named, has_many: true})
       attr_accessor named
-      # pisar initialize
-
-      # define_method(named) do
-      #   value_getter = instance_variable_get("@#{named}")
-      #   if value_getter.nil?
-      #     return []
-      #   else
-      #     return value_getter
-      #   end
-      # end
-      # define_method("#{named}=") do |value|
-      #   instance_variable_set("@#{named}", value)
-      # end
+      self.define_method(:initialize) do
+        self.send(named.to_s + '=', [])
+      end
     end
 
     def add_column(nueva_columna)
