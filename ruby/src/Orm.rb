@@ -193,12 +193,12 @@ module Orm
       attr_accessor named
     end
 
-    def has_many(type, named:)
+    def has_many(type, named:,**parametros_opcionales)
       handle_columns
       # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
       # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
       # nice to have :D
-      @columns.push({'type': type, 'named': named, has_many: true})
+      add_column({'type': type, 'named': named, has_many: true}.merge(parametros_opcionales))
       attr_accessor named
       self.define_method(:initialize) do
         self.send(named.to_s + '=', [])

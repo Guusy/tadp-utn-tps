@@ -5,6 +5,12 @@ def find_by_id(table, id)
       .first
 end
 
+def get_relaciones(relacion, symbol_id, id)
+  TADB::DB.table(relacion).entries.select do |entry|
+    entry[symbol_id] == id
+  end
+end
+
 class Material
   include Orm
   has_one String, named: :peso

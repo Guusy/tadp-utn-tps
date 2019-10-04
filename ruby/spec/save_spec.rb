@@ -119,9 +119,8 @@ describe 'save' do
           @slack.save!
         end
         it 'crea la tabla de relacion y sus referencias' do
-          relaciones = TADB::DB.table("slack_canal").entries.select do |entry|
-            entry[:id_slack] == @slack.id
-          end
+          relaciones = get_relaciones('slack_canal', :id_slack,@slack.id)
+
           expect(relaciones[0][:id_slack]).to eq(@slack.id)
           expect(relaciones[0][:id_canal]).to eq(@general.id)
           expect(relaciones[1][:id_slack]).to eq(@slack.id)
@@ -185,7 +184,7 @@ describe 'save' do
     end
   end
 
-  context 'cuando una propiedad es declarada 2 veces' do
+  context 'cuando una propiedad es declarada 2 veces de has_one' do
     before do
       class Libro
         include Orm
@@ -200,6 +199,34 @@ describe 'save' do
     it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
       principito_db = find_by_id('libro', @el_principito.id)
       expect(principito_db[:titulo]).to eq(@el_principito.titulo)
+    end
+
+  end
+
+  context 'cuando una propiedad es declarada 2 veces de has_many' do
+    before do
+      class Pagina
+        include Orm
+        has_one String, named: :encabezado
+      end
+
+      class Libro
+        include Orm
+        has_many String, named: :paginas
+        has_many Pagina, named: :paginas
+      end
+
+      @pagina_1 = Pagina.new
+      @pagina_1.encabezado = "indice"
+      @el_principito = Libro.new
+      @el_principito.paginas.push(@pagina_1)
+      @el_principito.save!
+    end
+
+    it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
+      relaciones = get_relaciones('libro_pagina', :id_libro,@el_principito.id)
+      expect(relaciones[0][:id_libro]).to eq(@el_principito.id)
+      expect(relaciones[0][:id_pagina]).to eq(@pagina_1.id)
     end
 
   end
