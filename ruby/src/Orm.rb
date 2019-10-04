@@ -27,9 +27,18 @@ module Orm
       validacion = columna[:validate]
       valor = self.send(atributo)
       if validacion
-        unless validacion.call(valor)
-          raise "El atributo #{atributo} no cumple la validacion"
+        if valor.is_a?(Array)
+            valor.each do |hijo|
+              unless validacion.call(hijo)
+                raise "Algun atributo dentro de #{atributo} no cumple la validacion"
+              end
+            end
+        else
+          unless validacion.call(valor)
+            raise "El atributo #{atributo} no cumple la validacion"
+          end
         end
+
       end
       if no_blank
         if clase == String
@@ -193,7 +202,7 @@ module Orm
       attr_accessor named
     end
 
-    def has_many(type, named:,**parametros_opcionales)
+    def has_many(type, named:, **parametros_opcionales)
       handle_columns
       # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
       # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?

@@ -20,7 +20,34 @@ describe 'validate_atributo' do
         end
 
         it 'falla al querer guardarla' do
-          expect{@pizarra_joven.save!}.to raise_error "El atributo antiguedad no cumple la validacion"
+          expect { @pizarra_joven.save! }.to raise_error "El atributo antiguedad no cumple la validacion"
+        end
+      end
+    end
+    context 'y se declara sobre un has_many' do
+      before do
+        class Aula
+          include Orm
+          has_one String, named: :nombre
+        end
+        class Universidad
+          include Orm
+          has_many Aula, named: :aulas, validate: proc { |aula| aula.nombre != "magna" }
+        end
+      end
+      context 'y se le setea un valor que NO cumple la condicion' do
+        before do
+          @unsam = Universidad.new
+          @magna = Aula.new
+          @magna.nombre = "magna"
+          @tornavias = Aula.new
+          @tornavias.nombre = "tornavias"
+          @unsam.aulas.push(@tornavias)
+          @unsam.aulas.push(@magna)
+        end
+
+        it 'falla al querer guardarla' do
+          expect { @unsam.save! }.to raise_error "Algun atributo dentro de aulas no cumple la validacion"
         end
       end
     end
