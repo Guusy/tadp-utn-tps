@@ -200,6 +200,12 @@ module Orm
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
       add_column({'type': type, 'named': named, has_many: false}.merge(parametros_opcionales))
       attr_accessor named
+      defaultValue = parametros_opcionales[:default]
+      if defaultValue
+        self.define_method(:initialize) do
+          self.send(named.to_s + '=', defaultValue)
+        end
+      end
     end
 
     def has_many(type, named:, **parametros_opcionales)
