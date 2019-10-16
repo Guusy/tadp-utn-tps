@@ -186,19 +186,19 @@ describe 'save' do
 
   context 'cuando una propiedad es declarada 2 veces de has_one' do
     before do
-      class Libro
+      class Comic
         include Orm
         has_one Numeric, named: :titulo
         has_one String, named: :titulo
       end
-      @el_principito = Libro.new
-      @el_principito.titulo = "titulo"
-      @el_principito.save!
+      @superman = Comic.new
+      @superman.titulo = "titulo"
+      @superman.save!
     end
 
     it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
-      principito_db = find_by_id('libro', @el_principito.id)
-      expect(principito_db[:titulo]).to eq(@el_principito.titulo)
+      superman_db = find_by_id('comic', @superman.id)
+      expect(superman_db[:titulo]).to eq(@superman.titulo)
     end
 
   end
@@ -224,7 +224,7 @@ describe 'save' do
     end
 
     it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
-      relaciones = get_relaciones('libro_pagina', :id_libro,@el_principito.id)
+      relaciones = get_relaciones('libro_pagina', :id_libro,  @el_principito.id)
       expect(relaciones[0][:id_libro]).to eq(@el_principito.id)
       expect(relaciones[0][:id_pagina]).to eq(@pagina_1.id)
     end
