@@ -17,6 +17,20 @@ describe 'default values' do
       it 'se le pone el valor default en el atributo' do
         expect(@sin_nombre.nombre).to eq("sin nombre")
       end
+      context 'y se setea el atributo como nil' do
+        before do
+          @sin_nombre.nombre = nil
+        end
+        context 'y lo persistimos' do
+          before do
+            @sin_nombre.save!
+          end
+          it 'se guarda en la DB con el valor default' do
+            hotel_db = find_by_id('hotel', @sin_nombre.id)
+            expect(hotel_db[:nombre]).to eq("sin nombre")
+          end
+        end
+      end
       context 'y al guardar en la base de datos' do
         before do
           @sin_nombre.save!

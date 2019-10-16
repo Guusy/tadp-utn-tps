@@ -104,6 +104,10 @@ module Orm
       symbol = column[:named]
       clase = column[:type]
       valor = self.send(symbol)
+      defaultValue = column[:default]
+      if valor.nil? && defaultValue
+        valor = defaultValue
+      end
       if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
