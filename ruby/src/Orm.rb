@@ -28,11 +28,11 @@ module Orm
       valor = self.send(atributo)
       if validacion
         if valor.is_a?(Array)
-            valor.each do |hijo|
-              unless validacion.call(hijo)
-                raise "Algun atributo dentro de #{atributo} no cumple la validacion"
-              end
+          valor.each do |hijo|
+            unless validacion.call(hijo)
+              raise "Algun atributo dentro de #{atributo} no cumple la validacion"
             end
+          end
         else
           unless validacion.call(valor)
             raise "El atributo #{atributo} no cumple la validacion"
@@ -104,9 +104,9 @@ module Orm
       symbol = column[:named]
       clase = column[:type]
       valor = self.send(symbol)
-      defaultValue = column[:default]
-      if valor.nil? && defaultValue
-        valor = defaultValue
+      valor_default = column[:default]
+      if valor.nil? && valor_default
+        valor = valor_default
       end
       if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
@@ -126,6 +126,10 @@ module Orm
       symbol = columna[:named]
       clase = columna[:type]
       valor = self.send(symbol)
+      valor_default = columna[:default]
+      if valor.nil? && valor_default
+        valor = valor_default
+      end
       if valor.is_a? Array
         valor.each do |has_many_valor|
           id = has_many_valor.save!
@@ -204,10 +208,10 @@ module Orm
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
       add_column({'type': type, 'named': named, has_many: false}.merge(parametros_opcionales))
       attr_accessor named
-      defaultValue = parametros_opcionales[:default]
-      if defaultValue
+      valor_default = parametros_opcionales[:default]
+      if valor_default
         self.define_method(:initialize) do
-          self.send(named.to_s + '=', defaultValue)
+          self.send(named.to_s + '=', valor_default)
         end
       end
     end
@@ -219,8 +223,16 @@ module Orm
       # nice to have :D
       add_column({'type': type, 'named': named, has_many: true}.merge(parametros_opcionales))
       attr_accessor named
-      self.define_method(:initialize) do
-        self.send(named.to_s + '=', [])
+
+      valor_por_defecto = parametros_opcionales[:default]
+      if valor_por_defecto
+        self.define_method(:initialize) do
+          self.send(named.to_s + '=', valor_por_defecto)
+        end
+      else
+        self.define_method(:initialize) do
+          self.send(named.to_s + '=', [])
+        end
       end
     end
 
