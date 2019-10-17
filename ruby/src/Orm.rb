@@ -224,10 +224,13 @@ module Orm
       add_column({'type': type, 'named': named, has_many: true}.merge(parametros_opcionales))
       attr_accessor named
 
-      valor_por_defecto = parametros_opcionales[:default]
-      if valor_por_defecto
+      valor_default = parametros_opcionales[:default]
+      if valor_default
+        unless valor_default.is_a? Array
+          raise "El valor del default no es valido"
+        end
         self.define_method(:initialize) do
-          self.send(named.to_s + '=', valor_por_defecto)
+          self.send(named.to_s + '=', valor_default)
         end
       else
         self.define_method(:initialize) do
