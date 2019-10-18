@@ -1,5 +1,5 @@
 require 'tadb'
-
+require_relative './Columna'
 # agregar mensaje id :D
 module Orm
   def get_table
@@ -10,6 +10,10 @@ module Orm
     self.class.columns || []
   end
 
+  def popular_objeto(objeto, objeto_db)
+    self.class.popular_objeto(objeto, objeto_db, get_columns)
+  end
+
   def check_id
     if self.id.nil?
       raise "Este objeto no esta persistido"
@@ -18,120 +22,42 @@ module Orm
 
   def validate!
     get_columns.each do |columna|
-      atributo = columna[:named]
-      clase = columna[:type]
-      has_many = columna[:has_many]
-      no_blank = columna[:no_blank]
-      from = columna[:from]
-      to = columna[:to]
-      validacion = columna[:validate]
+      atributo = columna.atributo
       valor = self.send(atributo)
-      if validacion
-        if valor.is_a?(Array)
-          valor.each do |hijo|
-            unless validacion.call(hijo)
-              raise "Algun atributo dentro de #{atributo} no cumple la validacion"
-            end
-          end
-        else
-          unless validacion.call(valor)
-            raise "El atributo #{atributo} no cumple la validacion"
-          end
-        end
-
-      end
-      if no_blank
-        if clase == String
-          if valor.empty?
-            raise mensaje_error_vacio(atributo)
-          end
-        end
-        if valor.nil?
-          raise mensaje_error_vacio(atributo)
-        end
-      end
-      if from
-        if valor < from
-          raise mensaje_error_menor(atributo, from, valor)
-        end
-      end
-      if to
-        if valor > to
-          raise mensaje_error_mayor(atributo, to, valor)
-        end
-      end
-      if valor
-        if has_many
-          unless valor.is_a?(Array)
-            raise mensaje_error_de_tipos(self.class, atributo, "Array", valor)
-          end
-          valor.each do |hijo|
-            unless hijo.is_a?(clase)
-              raise mensaje_error_de_tipos(self.class, atributo, clase, hijo.class)
-            end
-          end
-        else
-          unless valor.is_a?(clase)
-            raise mensaje_error_de_tipos(self.class, atributo, clase, valor)
-          end
-        end
-
-      end
+      columna.validar(self.class, valor)
     end
-  end
-
-  def mensaje_error_menor(atributo, valor_esperado, valor_actual)
-    "El atributo #{atributo} es menor a #{valor_esperado}, valor actual : #{valor_actual}"
-  end
-
-  def mensaje_error_mayor(atributo, valor_esperado, valor_actual)
-    "El atributo #{atributo} es mayor a #{valor_esperado}, valor actual : #{valor_actual}"
-  end
-
-  def mensaje_error_vacio(propiedad)
-    "El atributo #{propiedad} esta vacio!"
-  end
-
-  def mensaje_error_de_tipos(clase_base, atributo, clase_esperada, valor)
-    "En #{clase_base} el atributo #{atributo} no es un #{clase_esperada}! valor actual : #{valor}"
   end
 
   def save!
     hash = {}
     validate!
-    get_columns.each do |column|
-      symbol = column[:named]
-      clase = column[:type]
-      valor = self.send(symbol)
-      valor_default = column[:default]
-      if valor.nil? && valor_default
-        valor = valor_default
+    get_columns.each do |columna|
+      valor = self.send(columna.atributo)
+      if valor.nil?
+        valor = columna.valor_default
       end
       if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
-        if clase.respond_to?(:has_one)
+        if columna.es_persistible
           if valor.id.nil?
             valor.save!
           end
           valor_a_guardar = valor.id
         end
-        hash[symbol] = valor_a_guardar
+        hash[columna.atributo] = valor_a_guardar
       end
     end
     @id = TADB::DB.table(get_table).insert(hash)
     principal_table = get_table
     get_columns.each do |columna|
-      symbol = columna[:named]
-      clase = columna[:type]
-      valor = self.send(symbol)
-      valor_default = columna[:default]
-      if valor.nil? && valor_default
-        valor = valor_default
+      valor = self.send(columna.atributo)
+      if valor.nil?
+        valor = columna.valor_default
       end
       if valor.is_a? Array
         valor.each do |has_many_valor|
           id = has_many_valor.save!
-          secondary_table = clase.get_table
+          secondary_table = columna.obtener_tabla
           has_many_hash = {"id_#{principal_table}": @id, "id_#{secondary_table}": id}
           TADB::DB.table("#{principal_table}_#{secondary_table}").insert(has_many_hash)
         end
@@ -142,16 +68,8 @@ module Orm
 
   def resfresh!
     check_id
-    object_in_db = self.class.find_by_id(self.id)
-    get_columns.each do |column|
-      clase = column[:type]
-      valor = object_in_db[column[:named]]
-      if clase.respond_to?(:has_one)
-        id = valor
-        valor = clase.obtener_objeto_de_dominio(id)
-      end
-      self.instance_variable_set("@#{column[:named]}", valor)
-    end
+    objeto_db = self.class.find_by_id(self.id)
+    popular_objeto(self, objeto_db)
   end
 
   def forget!
@@ -179,7 +97,7 @@ module Orm
       @descendientes.push(descendiente)
     end
 
-    def has_one(type, named:, **parametros_opcionales)
+    def has_one(type, named:, **params_opcionales)
       columnas_de_superclase = []
 
       if self.respond_to?(:superclass)
@@ -198,11 +116,11 @@ module Orm
         @columns = columnas_de_todos + columnas_de_superclase
       end
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
-      add_column({'type': type, 'named': named, has_many: false}.merge(parametros_opcionales))
-      add_column({named: :id})
+      add_column(Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales))
+      add_column(Columna.new(clase: String, atributo: :id))
       attr_accessor :id
       attr_accessor named
-      valor_default = parametros_opcionales[:default]
+      valor_default = params_opcionales[:default]
       if valor_default
         self.define_method(:initialize) do
           self.send(named.to_s + '=', valor_default)
@@ -215,8 +133,8 @@ module Orm
       # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
       # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
       # nice to have :D
-      add_column({'type': type, 'named': named, has_many: true}.merge(parametros_opcionales))
-      add_column({named: :id})
+      add_column(Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales))
+      add_column(Columna.new(clase: String, atributo: :id))
       attr_accessor :id
       attr_accessor named
 
@@ -239,7 +157,7 @@ module Orm
       handle_columns
       hubo_reemplazo = false
       @columns = @columns.map { |columna|
-        if columna[:named] == nueva_columna[:named]
+        if columna.atributo == nueva_columna.atributo
           hubo_reemplazo = true
           nueva_columna
         else
@@ -267,19 +185,19 @@ module Orm
     def obtener_objeto_de_dominio(id, objeto_db_param = false) # TODO: pensar una mejor firma para este metodo
       objeto_db = objeto_db_param || self.find_by_id(id)
       objeto = self.new
-      @columns.each { |columna|
-        atributo = columna[:named]
-        clase = columna[:type]
-        valor = objeto_db[atributo]
-        if clase.respond_to?(:has_one)
-          id = valor
-          valor = clase.obtener_objeto_de_dominio(id)
-        end
-        objeto.instance_variable_set("@#{atributo}", valor)
-      }
-      objeto.singleton_class.module_eval { attr_accessor :id }
-      objeto.instance_variable_set("@id", objeto_db[:id])
+      popular_objeto(objeto, objeto_db, @columns)
       objeto
+    end
+
+    def popular_objeto(objeto, objeto_db, columnas)
+      columnas.each { |columna|
+        valor = objeto_db[columna.atributo]
+        if columna.es_persistible
+          id = valor
+          valor = columna.clase.obtener_objeto_de_dominio(id)
+        end
+        objeto.instance_variable_set("@#{columna.atributo}", valor)
+      }
     end
 
     def get_table
@@ -297,6 +215,7 @@ module Orm
       all_instances_clase + all_instances_descendientes
     end
 
+    # TODO: sobrescribir lo que falta para que de true el respond_to
     def method_missing(symbol, *args, &block)
       nombre_mensaje = symbol.to_s
       if nombre_mensaje.start_with?('search_by_')
