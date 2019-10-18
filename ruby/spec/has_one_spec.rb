@@ -5,19 +5,17 @@ describe 'has_one' do
         include Orm
         has_one String, named: :nombre
       end
+      @una_persona = Persona.new
     end
     after do
       TADB::DB.clear_all
     end
     it 'se le agrega el atributo a la' do
-      persona = Persona.new
-      expect(persona).to have_attributes(:nombre => nil)
+      expect(@una_persona).to have_attributes(:nombre => nil)
     end
 
-    # TODO: ver como chequear esto
-    # it 'se le asigna el tipo especificado a el atributo ' do
-    # persona = Persona.new
-    # expect(persona.nombre).to be_a_kind_of(String)
-    # end
+    it 'se le agrega el mensaje id' do
+      expect(@una_persona.id).to eq(nil)
+    end
   end
 end

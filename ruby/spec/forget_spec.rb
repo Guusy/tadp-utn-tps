@@ -2,6 +2,7 @@ describe 'forget' do
   before do
     class Patito
       include Orm
+      has_one String, named: :nombre
     end
   end
   after do

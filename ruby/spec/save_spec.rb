@@ -119,7 +119,7 @@ describe 'save' do
           @slack.save!
         end
         it 'crea la tabla de relacion y sus referencias' do
-          relaciones = get_relaciones('slack_canal', :id_slack,@slack.id)
+          relaciones = get_relaciones('slack_canal', :id_slack, @slack.id)
 
           expect(relaciones[0][:id_slack]).to eq(@slack.id)
           expect(relaciones[0][:id_canal]).to eq(@general.id)
@@ -224,7 +224,7 @@ describe 'save' do
     end
 
     it 'se pisa con el ultimo valor que se le dio y se valida ese valor' do
-      relaciones = get_relaciones('libro_pagina', :id_libro,  @el_principito.id)
+      relaciones = get_relaciones('libro_pagina', :id_libro, @el_principito.id)
       expect(relaciones[0][:id_libro]).to eq(@el_principito.id)
       expect(relaciones[0][:id_pagina]).to eq(@pagina_1.id)
     end

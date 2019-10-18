@@ -11,7 +11,7 @@ module Orm
   end
 
   def check_id
-    unless self.respond_to?(:id)
+    if self.id.nil?
       raise "Este objeto no esta persistido"
     end
   end
@@ -97,7 +97,6 @@ module Orm
   end
 
   def save!
-    self.singleton_class.module_eval { attr_accessor :id }
     hash = {}
     validate!
     get_columns.each do |column|
@@ -111,7 +110,7 @@ module Orm
       if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
         if clase.respond_to?(:has_one)
-          unless valor.respond_to?(:id)
+          if valor.id.nil?
             valor.save!
           end
           valor_a_guardar = valor.id
@@ -120,7 +119,6 @@ module Orm
       end
     end
     @id = TADB::DB.table(get_table).insert(hash)
-    self.class.add_column({named: :id})
     principal_table = get_table
     get_columns.each do |columna|
       symbol = columna[:named]
@@ -166,14 +164,8 @@ module Orm
   module ClassMethods
     attr_accessor :columns, :descendientes
 
-    # buscar oninclude o included (Hook)
-    def include(*includes)
-      includes.each do |include|
-        if include.respond_to?(:has_one)
-          include.agregar_descendiente(self)
-        end
-      end
-      super(*includes)
+    def included(sub_clase)
+      self.agregar_descendiente(sub_clase)
     end
 
     def inherited(sub_clase)
@@ -207,6 +199,8 @@ module Orm
       end
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
       add_column({'type': type, 'named': named, has_many: false}.merge(parametros_opcionales))
+      add_column({named: :id})
+      attr_accessor :id
       attr_accessor named
       valor_default = parametros_opcionales[:default]
       if valor_default
@@ -222,6 +216,8 @@ module Orm
       # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
       # nice to have :D
       add_column({'type': type, 'named': named, has_many: true}.merge(parametros_opcionales))
+      add_column({named: :id})
+      attr_accessor :id
       attr_accessor named
 
       valor_default = parametros_opcionales[:default]
