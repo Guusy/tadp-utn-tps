@@ -98,11 +98,7 @@ module Orm
 
     def has_one(type, named:, **params_opcionales)
       columnas_de_superclase = get_columnas_super_clase
-      modulos_persistibles_incluidos = included_modules.select do |x|
-        x.respond_to?(:has_one) ## distinguir pot orm
-      end
-      columnas_de_todos = modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
-      # NTH :  revisar
+      columnas_de_todos = get_columna_de_todos
       unless @columns
         @columns = columnas_de_todos + columnas_de_superclase
       end
@@ -120,6 +116,13 @@ module Orm
       end
       columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
       definir_columna(columna)
+    end
+
+    def get_columna_de_todos
+      modulos_persistibles_incluidos = included_modules.select do |x|
+        x.respond_to?(:has_one) ## distinguir pot orm
+      end
+      modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
     end
 
     def get_columnas_super_clase

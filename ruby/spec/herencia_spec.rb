@@ -32,46 +32,86 @@ describe 'Herencia' do
   end
 
   context 'cuando se persiste una clase que hereda otra' do
-    before do
-      class Consola
-        include Orm
-        has_one String, named: :origen
-      end
-
-      class Ps4 < Consola
-        include Orm
-        has_one String, named: :compania
-      end
-
-      @ps4 = Ps4.new
-      @ps4.compania = "sony"
-      @ps4.origen = "china"
-      @ps4.save!
-    end
-
-    it 'se guardan todos los atributos en el objeto' do
-      expect(@ps4.compania).to eq("sony")
-      expect(@ps4.origen).to eq("china")
-    end
-    it 'se guardan todos los atributos en el mismo registro de la base de datos' do
-      ps4_db = find_by_id("ps4", @ps4.id)
-      expect(ps4_db[:compania]).to eq("sony")
-      expect(ps4_db[:origen]).to eq("china")
-    end
-    context 'y una property de la subclase pisa una de super clase' do
+    context 'sobre un has_one' do
       before do
-        class Xbox < Consola
+        class Consola
           include Orm
-          has_one Numeric, named: :origen
+          has_one String, named: :origen
         end
-        @xbox = Xbox.new
-        @xbox.origen = 1235
-        @xbox.save!
+
+        class Ps4 < Consola
+          include Orm
+          has_one String, named: :compania
+        end
+
+        @ps4 = Ps4.new
+        @ps4.compania = "sony"
+        @ps4.origen = "china"
+        @ps4.save!
+      end
+
+      it 'se guardan todos los atributos en el objeto' do
+        expect(@ps4.compania).to eq("sony")
+        expect(@ps4.origen).to eq("china")
       end
       it 'se guardan todos los atributos en el mismo registro de la base de datos' do
-        xbox_db = find_by_id("xbox", @xbox.id)
-        expect(xbox_db[:origen]).to eq(1235)
+        ps4_db = find_by_id("ps4", @ps4.id)
+        expect(ps4_db[:compania]).to eq("sony")
+        expect(ps4_db[:origen]).to eq("china")
+      end
+      context 'y una property de la subclase pisa una de super clase' do
+        before do
+          class Xbox < Consola
+            include Orm
+            has_one Numeric, named: :origen
+          end
+          @xbox = Xbox.new
+          @xbox.origen = 1235
+          @xbox.save!
+        end
+        it 'se guardan todos los atributos en el mismo registro de la base de datos' do
+          xbox_db = find_by_id("xbox", @xbox.id)
+          expect(xbox_db[:origen]).to eq(1235)
+        end
       end
     end
+
+    # context 'sobre un has_many' do
+    #   before do
+    #     class Procesador
+    #       include Orm
+    #       has_one String, named: :marca
+    #     end
+    #     class Led
+    #       include Orm
+    #       has_one String, named: :color
+    #     end
+    #     class Chip
+    #       include Orm
+    #       has_many Led, named: :leds
+    #     end
+    #
+    #     class MicroChip < Chip
+    #       include Orm
+    #       has_many Procesador, named: :procesador
+    #     end
+    #
+    #     @intel = Procesador.new
+    #     @led_rojo = Led.new
+    #     @micro = MicroChip.new
+    #     @micro.leds.push(@led_rojo)
+    #     @micro.procesador.push(@intel)
+    #     @micro.save!
+    #   end
+    #   it 'se guardan todos los atributos en el objeto' do
+    #     #expect(@micro.leds).to eq([@led_rojo])
+    #     expect(@micro.procesador).to eq([@intel])
+    #   end
+    #   it 'se guardan todos los atributos en el mismo registro de la base de datos' do
+    #     micro_relacion = get_relaciones('microchip_procesador', :id_microchip, @micro.id)
+    #     expect(micro_relacion[0][:id_procesador]).to eq(@intel.id)
+    #   end
+    # end
+
   end
 end
