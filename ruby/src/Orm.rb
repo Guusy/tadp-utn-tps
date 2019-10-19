@@ -116,16 +116,8 @@ module Orm
         @columns = columnas_de_todos + columnas_de_superclase
       end
       # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
-      add_column(Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales))
-      add_column(Columna.new(clase: String, atributo: :id))
-      attr_accessor :id
-      attr_accessor named
-      valor_default = params_opcionales[:default]
-      if valor_default
-        self.define_method(:initialize) do
-          self.send(named.to_s + '=', valor_default)
-        end
-      end
+      columna = Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
+      definir_columna(columna)
     end
 
     def has_many(type, named:, **parametros_opcionales)
@@ -133,23 +125,23 @@ module Orm
       # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
       # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
       # nice to have :D
-      add_column(Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales))
-      add_column(Columna.new(clase: String, atributo: :id))
-      attr_accessor :id
-      attr_accessor named
-
       valor_default = parametros_opcionales[:default]
       if valor_default
         unless valor_default.is_a? Array
           raise "El valor del default no es valido"
         end
-        self.define_method(:initialize) do
-          self.send(named.to_s + '=', valor_default)
-        end
-      else
-        self.define_method(:initialize) do
-          self.send(named.to_s + '=', [])
-        end
+      end
+      columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
+      definir_columna(columna)
+    end
+
+    def definir_columna(columna)
+      add_column(columna)
+      add_column(Columna.new(clase: String, atributo: :id))
+      attr_accessor :id
+      attr_accessor columna.atributo
+      self.define_method(:initialize) do
+        self.send(columna.atributo.to_s + '=', columna.valor_default)
       end
     end
 

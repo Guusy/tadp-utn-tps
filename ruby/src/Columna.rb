@@ -18,7 +18,11 @@ class Columna
   end
 
   def valor_default
-    parametros_opcionales[:default]
+    valor = parametros_opcionales[:default]
+    if has_many
+      valor = valor ? valor : []
+    end
+    valor
   end
 
   def validar(clase_contenedora, valor)
