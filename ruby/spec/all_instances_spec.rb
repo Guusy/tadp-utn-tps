@@ -112,7 +112,7 @@ describe 'all_instances' do
       end
 
       it 'responde con todas las instancias' do
-        guerrero_all_instances = Atacante.all_instances()[0]
+        guerrero_all_instances = Atacante.all_instances[0]
         expect(guerrero_all_instances.rango).to eq(@comandante.rango)
         expect(guerrero_all_instances.poder_ofensivo).to eq(@comandante.poder_ofensivo)
       end

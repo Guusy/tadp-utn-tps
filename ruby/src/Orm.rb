@@ -1,13 +1,12 @@
 require 'tadb'
 require_relative './Columna'
-# agregar mensaje id :D
 module Orm
   def get_table
-    self.class.name.downcase
+    self.class.get_table
   end
 
   def get_columns
-    self.class.columns || []
+    self.class.columns
   end
 
   def popular_objeto(objeto, objeto_db)
@@ -33,9 +32,7 @@ module Orm
     validate!
     get_columns.each do |columna|
       valor = self.send(columna.atributo)
-      if valor.nil?
-        valor = columna.valor_default
-      end
+      valor = (valor.nil?) ? columna.valor_default : valor
       if !valor.nil? && !valor.is_a?(Array)
         valor_a_guardar = valor
         if columna.es_persistible
@@ -51,9 +48,7 @@ module Orm
     principal_table = get_table
     get_columns.each do |columna|
       valor = self.send(columna.atributo)
-      if valor.nil?
-        valor = columna.valor_default
-      end
+      valor = (valor.nil?) ? columna.valor_default : valor
       if valor.is_a? Array
         valor.each do |has_many_valor|
           id = has_many_valor.save!
@@ -97,16 +92,12 @@ module Orm
       @descendientes.push(descendiente)
     end
 
+    def es_persistible(valor)
+      valor.ancestors.include?(Orm)
+    end
+
     def has_one(type, named:, **params_opcionales)
-      columnas_de_superclase = []
-
-      if self.respond_to?(:superclass)
-        tiene_superclase_persistible = self.superclass.respond_to?(:has_one)
-        if tiene_superclase_persistible
-          columnas_de_superclase = (self.superclass.columns) ? self.superclass.columns : []
-        end
-      end
-
+      columnas_de_superclase = get_columnas_super_clase
       modulos_persistibles_incluidos = included_modules.select do |x|
         x.respond_to?(:has_one) ## distinguir pot orm
       end
@@ -115,16 +106,12 @@ module Orm
       unless @columns
         @columns = columnas_de_todos + columnas_de_superclase
       end
-      # TODO: hace un test sobre que este declarado una property en una super clase y se pise en un sub clase
       columna = Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
       definir_columna(columna)
     end
 
     def has_many(type, named:, **parametros_opcionales)
-      handle_columns
-      # TODO cambiar al metodo por add_column pero antes generar el test correspondiente
-      # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ?
-      # nice to have :D
+      # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ? nice to have :D
       valor_default = parametros_opcionales[:default]
       if valor_default
         unless valor_default.is_a? Array
@@ -133,6 +120,16 @@ module Orm
       end
       columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
       definir_columna(columna)
+    end
+
+    def get_columnas_super_clase
+      if self.respond_to?(:superclass)
+        super_clase = self.superclass
+        if es_persistible(super_clase)
+          return super_clase.columns
+        end
+      end
+      []
     end
 
     def definir_columna(columna)
@@ -146,9 +143,8 @@ module Orm
     end
 
     def add_column(nueva_columna)
-      handle_columns
       hubo_reemplazo = false
-      @columns = @columns.map { |columna|
+      self.columns = self.columns.map { |columna|
         if columna.atributo == nueva_columna.atributo
           hubo_reemplazo = true
           nueva_columna
@@ -157,14 +153,16 @@ module Orm
         end
       }
       unless hubo_reemplazo
-        @columns.push(nueva_columna)
+        self.columns.push(nueva_columna)
       end
     end
 
-    def handle_columns
-      unless @columns
-        @columns = []
-      end
+    def columns
+      @columns || []
+    end
+
+    def descendientes
+      @descendientes || []
     end
 
     def find_by_id(id)
@@ -174,10 +172,9 @@ module Orm
           .first
     end
 
-    def obtener_objeto_de_dominio(id, objeto_db_param = false) # TODO: pensar una mejor firma para este metodo
-      objeto_db = objeto_db_param || self.find_by_id(id)
+    def obtener_objeto_de_dominio(objeto_db)
       objeto = self.new
-      popular_objeto(objeto, objeto_db, @columns)
+      popular_objeto(objeto, objeto_db, self.columns)
       objeto
     end
 
@@ -186,7 +183,7 @@ module Orm
         valor = objeto_db[columna.atributo]
         if columna.es_persistible
           id = valor
-          valor = columna.clase.obtener_objeto_de_dominio(id)
+          valor = columna.clase.obtener_objeto_de_dominio(columna.clase.find_by_id(id))
         end
         objeto.instance_variable_set("@#{columna.atributo}", valor)
       }
@@ -197,12 +194,11 @@ module Orm
     end
 
     def all_instances
-      all_instances_descendientes = (@descendientes) ?
-                                        @descendientes.flat_map do |descendiente|
-                                          descendiente.all_instances
-                                        end : []
+      all_instances_descendientes = self.descendientes.flat_map do |descendiente|
+        descendiente.all_instances
+      end
       all_instances_clase = TADB::DB.table(get_table).entries.map { |entry|
-        self.obtener_objeto_de_dominio(entry[:id], entry)
+        self.obtener_objeto_de_dominio(entry)
       }
       all_instances_clase + all_instances_descendientes
     end
