@@ -1,5 +1,6 @@
 require 'tadb'
 require_relative './Columna'
+# TODO : cambiar el nombre a persistible (hacer metodos mas cohesivos y empezar a delegar)
 module Orm
   def get_table
     self.class.get_table
@@ -30,6 +31,8 @@ module Orm
   def save!
     hash = {}
     validate!
+    # TODO :mandar a guardar todos los objetos con composicion primero y luego hacer lo demas
+    # delegar en la columa, evaluar la posibilidad de tener una clase tabla
     get_columns.each do |columna|
       valor = self.send(columna.atributo)
       valor = (valor.nil?) ? columna.valor_default : valor
@@ -45,6 +48,7 @@ module Orm
       end
     end
     @id = TADB::DB.table(get_table).insert(hash)
+    # Delegar en mandar en la columna de persistir la relaciones
     principal_table = get_table
     get_columns.each do |columna|
       valor = self.send(columna.atributo)
@@ -75,6 +79,7 @@ module Orm
 
 
   module ClassMethods
+    # TODO :  evaluar la posibilidad de cambiar columnas a un hash
     attr_accessor :columns, :descendientes
 
     def included(sub_clase)
@@ -114,13 +119,18 @@ module Orm
           raise "El valor del default no es valido"
         end
       end
+      # columnas_de_superclase = get_columnas_super_clase
+      # columnas_de_todos = get_columna_de_todos
+      # unless @columns
+      #   @columns = columnas_de_todos + columnas_de_superclase
+      # end
       columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
       definir_columna(columna)
     end
 
     def get_columna_de_todos
       modulos_persistibles_incluidos = included_modules.select do |x|
-        x.respond_to?(:has_one) ## distinguir pot orm
+        x.respond_to?(:columns) ## distinguir pot orm
       end
       modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
     end
@@ -135,13 +145,16 @@ module Orm
       []
     end
 
+    # TODO : pensar nombres mas cohesivos y ademas dejar de tener tantos nombres iguales
     def definir_columna(columna)
       add_column(columna)
+      # TODo: Buscar la manera de no andar declarando todo el tiempo ID, deberia ser solo cuando se lo incluye
       add_column(Columna.new(clase: String, atributo: :id))
       attr_accessor :id
       attr_accessor columna.atributo
       self.define_method(:initialize) do
         self.send(columna.atributo.to_s + '=', columna.valor_default)
+        super()
       end
     end
 
@@ -165,6 +178,7 @@ module Orm
     end
 
     def descendientes
+      # TODO:  hacer un mejor handler con un if
       @descendientes || []
     end
 

@@ -76,42 +76,43 @@ describe 'Herencia' do
       end
     end
 
-    # context 'sobre un has_many' do
-    #   before do
-    #     class Procesador
-    #       include Orm
-    #       has_one String, named: :marca
-    #     end
-    #     class Led
-    #       include Orm
-    #       has_one String, named: :color
-    #     end
-    #     class Chip
-    #       include Orm
-    #       has_many Led, named: :leds
-    #     end
-    #
-    #     class MicroChip < Chip
-    #       include Orm
-    #       has_many Procesador, named: :procesador
-    #     end
-    #
-    #     @intel = Procesador.new
-    #     @led_rojo = Led.new
-    #     @micro = MicroChip.new
-    #     @micro.leds.push(@led_rojo)
-    #     @micro.procesador.push(@intel)
-    #     @micro.save!
-    #   end
-    #   it 'se guardan todos los atributos en el objeto' do
-    #     #expect(@micro.leds).to eq([@led_rojo])
-    #     expect(@micro.procesador).to eq([@intel])
-    #   end
-    #   it 'se guardan todos los atributos en el mismo registro de la base de datos' do
-    #     micro_relacion = get_relaciones('microchip_procesador', :id_microchip, @micro.id)
-    #     expect(micro_relacion[0][:id_procesador]).to eq(@intel.id)
-    #   end
-    # end
+    context 'sobre un has_many' do
+      before do
+        class Procesador
+          include Orm
+          has_one String, named: :marca
+        end
+        class Led
+          include Orm
+          has_one String, named: :color
+        end
+        class Chip
+          include Orm
+          has_many Led, named: :leds
+        end
+
+        class MicroChip < Chip
+          include Orm
+          has_many Procesador, named: :procesador
+        end
+
+        @intel = Procesador.new
+        @led_rojo = Led.new
+        @micro = MicroChip.new
+        @micro.leds.push(@led_rojo)
+        @micro.procesador.push(@intel)
+        @micro.save!
+      end
+      it 'se guardan todos los atributos en el objeto' do
+        expect(@micro.leds).to eq([@led_rojo])
+        expect(@micro.procesador).to eq([@intel])
+      end
+      it 'se guardan todos los atributos en el mismo registro de la base de datos' do
+        micro_relacion = get_relaciones('microchip_procesador', :id_microchip, @micro.id)
+        expect(micro_relacion[0][:id_procesador]).to eq(@intel.id)
+        expect(micro_relacion[0][:id_microchip]).to eq(@micro.id)
+      end
+    end
 
   end
 end
