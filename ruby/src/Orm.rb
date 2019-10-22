@@ -21,7 +21,7 @@ module Persistible
   end
 
   def validate!
-    get_columns.each do |columna|
+    get_columns.each_value do |columna|
       atributo = columna.atributo
       valor = self.send(atributo)
       columna.validar(self.class, valor)
@@ -33,7 +33,7 @@ module Persistible
     validate!
     # TODO :mandar a guardar todos los objetos con composicion primero y luego hacer lo demas
     # delegar en la columa, evaluar la posibilidad de tener una clase tabla
-    get_columns.each do |columna|
+    get_columns.each_value do |columna|
       valor = self.send(columna.atributo)
       valor = (valor.nil?) ? columna.valor_default : valor
       if !valor.nil? && !valor.is_a?(Array)
@@ -49,20 +49,19 @@ module Persistible
     end
     @id = TADB::DB.table(get_table).insert(hash)
     # Delegar en mandar en la columna de persistir la relaciones
+    columnas_has_many = get_columns.select { |_, columna| columna.has_many }
     principal_table = get_table
-    get_columns.each do |columna|
+    columnas_has_many.each_value do |columna|
       valor = self.send(columna.atributo)
       valor = (valor.nil?) ? columna.valor_default : valor
-      if valor.is_a? Array
-        valor.each do |has_many_valor|
-          id = has_many_valor.save!
-          secondary_table = columna.obtener_tabla
-          has_many_hash = {"id_#{principal_table}": @id, "id_#{secondary_table}": id}
-          TADB::DB.table("#{principal_table}_#{secondary_table}").insert(has_many_hash)
-        end
+      valor.each do |has_many_valor|
+        id = has_many_valor.save!
+        secondary_table = columna.obtener_tabla
+        has_many_hash = {"id_#{principal_table}": @id, "id_#{secondary_table}": id}
+        TADB::DB.table("#{principal_table}_#{secondary_table}").insert(has_many_hash)
       end
-      return @id
     end
+    @id
   end
 
   def resfresh!
@@ -104,9 +103,7 @@ module Persistible
     def has_one(type, named:, **params_opcionales)
       columnas_de_superclase = get_columnas_super_clase
       columnas_de_todos = get_columna_de_todos
-      unless @columns
-        @columns = columnas_de_todos + columnas_de_superclase
-      end
+      @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
       columna = Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
       definir_columna(columna)
     end
@@ -119,11 +116,9 @@ module Persistible
           raise "El valor del default no es valido"
         end
       end
-      # columnas_de_superclase = get_columnas_super_clase
-      # columnas_de_todos = get_columna_de_todos
-      # unless @columns
-      #   @columns = columnas_de_todos + columnas_de_superclase
-      # end
+      columnas_de_superclase = get_columnas_super_clase
+      columnas_de_todos = get_columna_de_todos
+      @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
       columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
       definir_columna(columna)
     end
@@ -132,7 +127,11 @@ module Persistible
       modulos_persistibles_incluidos = included_modules.select do |x|
         x.respond_to?(:columns) ## distinguir pot orm
       end
-      modulos_persistibles_incluidos.flat_map { |modulo| modulo.columns }
+      hash = {}
+      modulos_persistibles_incluidos.each do |modulo|
+        hash = hash.merge(modulo.columns)
+      end
+      hash
     end
 
     def get_columnas_super_clase
@@ -142,14 +141,14 @@ module Persistible
           return super_clase.columns
         end
       end
-      []
+      {}
     end
 
     # TODO : pensar nombres mas cohesivos y ademas dejar de tener tantos nombres iguales
     def definir_columna(columna)
-      add_column(columna)
+      self.columns[columna.atributo] = columna
       # TODo: Buscar la manera de no andar declarando todo el tiempo ID, deberia ser solo cuando se lo incluye
-      add_column(Columna.new(clase: String, atributo: :id))
+      self.columns[:id] = Columna.new(clase: String, atributo: :id)
       attr_accessor :id
       attr_accessor columna.atributo
       self.define_method(:initialize) do
@@ -158,23 +157,11 @@ module Persistible
       end
     end
 
-    def add_column(nueva_columna)
-      hubo_reemplazo = false
-      self.columns = self.columns.map { |columna|
-        if columna.atributo == nueva_columna.atributo
-          hubo_reemplazo = true
-          nueva_columna
-        else
-          columna
-        end
-      }
-      unless hubo_reemplazo
-        self.columns.push(nueva_columna)
-      end
-    end
-
     def columns
-      @columns || []
+      unless @columns
+        @columns = {}
+      end
+      @columns
     end
 
     def descendientes
@@ -196,7 +183,7 @@ module Persistible
     end
 
     def popular_objeto(objeto, objeto_db, columnas)
-      columnas.each { |columna|
+      columnas.each_value { |columna|
         valor = objeto_db[columna.atributo]
         if columna.es_persistible
           id = valor

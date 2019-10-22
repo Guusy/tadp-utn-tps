@@ -86,6 +86,7 @@ describe 'Herencia' do
           include Persistible
           has_one String, named: :color
         end
+
         class Chip
           include Persistible
           has_many Led, named: :leds
@@ -108,9 +109,10 @@ describe 'Herencia' do
         expect(@micro.procesador).to eq([@intel])
       end
       it 'se guardan todos los atributos en el mismo registro de la base de datos' do
-        micro_relacion = get_relaciones('microchip_procesador', :id_microchip, @micro.id)
-        expect(micro_relacion[0][:id_procesador]).to eq(@intel.id)
-        expect(micro_relacion[0][:id_microchip]).to eq(@micro.id)
+        micro_procesador_relacion = get_relaciones('microchip_procesador', :id_microchip, @micro.id)
+        micro_led_relacion = get_relaciones('microchip_led', :id_microchip, @micro.id)
+        expect(micro_procesador_relacion[0][:id_procesador]).to eq(@intel.id)
+        expect(micro_led_relacion[0][:id_led]).to eq(@led_rojo.id)
       end
     end
 
