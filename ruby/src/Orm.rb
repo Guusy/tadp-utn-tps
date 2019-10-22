@@ -1,7 +1,7 @@
 require 'tadb'
 require_relative './Columna'
-# TODO : cambiar el nombre a persistible (hacer metodos mas cohesivos y empezar a delegar)
-module Orm
+# TODO : hacer metodos mas cohesivos y empezar a delegar
+module Persistible
   def get_table
     self.class.get_table
   end
@@ -98,7 +98,7 @@ module Orm
     end
 
     def es_persistible(valor)
-      valor.ancestors.include?(Orm)
+      valor.ancestors.include?(Persistible)
     end
 
     def has_one(type, named:, **params_opcionales)

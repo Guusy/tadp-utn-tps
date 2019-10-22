@@ -3,7 +3,7 @@ require 'rspec'
 describe 'search_by' do
   before do
     class Persona
-      include Orm
+      include Persistible
       has_one String, named: :nombre
       has_one String, named: :apellido
       has_one Numeric, named: :edad
@@ -76,7 +76,7 @@ describe 'search_by' do
       context 'y se tiene una dependencia simple' do
         before do
           class Mascota
-            include Orm
+            include Persistible
             has_one String, named: :tipo
           end
           class Persona
@@ -125,11 +125,11 @@ describe 'search_by' do
   context 'cuando se busca sobre un modulo el cual es incluido por otras clases' do
     before do
       module Instrumento
-        include Orm
+        include Persistible
         has_one String, named: :material
       end
       class Guitarra
-        include Orm
+        include Persistible
         include Instrumento
         has_one Numeric, named: :cantidad_cuerdas
       end
@@ -151,11 +151,11 @@ describe 'search_by' do
   context 'cuando se busca en una clase la cual es heredada por otras' do
     before do
       class Teclado
-        include Orm
+        include Persistible
         has_one Numeric, named: :cantidad_teclas
       end
       class TecladoMecanico < Teclado
-        include Orm
+        include Persistible
         has_one Numeric, named: :teclas_extras
       end
     end

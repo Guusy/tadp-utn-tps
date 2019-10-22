@@ -7,7 +7,7 @@ describe 'no_blank' do
     context 'y tiene un atributo Boolean vacio y se trata de persistir' do
       before do
         class Auto
-          include Orm
+          include Persistible
           has_one Boolean, named: :esta_chocado, no_blank: true
         end
         @auto = Auto.new
@@ -20,7 +20,7 @@ describe 'no_blank' do
     context 'y tiene un atributo String vacio y se trata de persistir' do
       before do
         class Piramide
-          include Orm
+          include Persistible
           has_one String, named: :nombre, no_blank: true
         end
         @piramide = Piramide.new
@@ -34,10 +34,10 @@ describe 'no_blank' do
     context 'y tiene un atributo que hace referencia a otra entidad y se trata de persistir' do
       before do
         class Plantilla
-          include Orm
+          include Persistible
         end
         class Zapatilla
-          include Orm
+          include Persistible
           has_one Plantilla, named: :plantilla, no_blank: true
         end
         @zapatilla = Zapatilla.new

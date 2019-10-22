@@ -12,15 +12,15 @@ def get_relaciones(relacion, symbol_id, id)
 end
 
 class Material
-  include Orm
+  include Persistible
   has_one String, named: :peso
 end
 class Herramienta
-  include Orm
+  include Persistible
   has_one Material, named: :material
 end
 class Obrero
-  include Orm
+  include Persistible
   has_one Herramienta, named: :herramienta
   has_one String, named: :nombre
 end

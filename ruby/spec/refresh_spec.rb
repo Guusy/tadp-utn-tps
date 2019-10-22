@@ -3,7 +3,7 @@ require 'rspec'
 describe 'refresh' do
   before do
     class Patito
-      include Orm
+      include Persistible
       has_one String, named: :color
     end
   end
@@ -41,7 +41,7 @@ describe 'refresh' do
     context 'con dependencia simple' do
       before do
         class Casa
-          include Orm
+          include Persistible
           has_one String, named: :color
         end
         class Patito

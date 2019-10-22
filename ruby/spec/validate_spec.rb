@@ -6,7 +6,7 @@ describe 'validate' do
   context 'cuando se trata de persistir atributo que es String con un numero' do
     before do
       class Pepita
-        include Orm
+        include Persistible
         has_one String, named: :nombre
       end
       @pepita = Pepita.new
@@ -19,7 +19,7 @@ describe 'validate' do
   context 'cuando se tiene un atributo booleano' do
     before do
       class Camara
-        include Orm
+        include Persistible
         has_one Boolean, named: :es_profesional
       end
     end
@@ -48,7 +48,7 @@ describe 'validate' do
   context 'cuando se trata de persistir atributo que es Numeric con un string' do
     before do
       class Contador
-        include Orm
+        include Persistible
         has_one Numeric, named: :acumulador
       end
       @contador = Contador.new
@@ -62,11 +62,11 @@ describe 'validate' do
   context 'cuando se trata de persisitir un atributo que es complejo' do
     before do
       class Portero
-        include Orm
+        include Persistible
         has_one Numeric, named: :edad
       end
       class Edificio
-        include Orm
+        include Persistible
         has_one Portero, named: :portero
       end
     end
@@ -99,11 +99,11 @@ describe 'validate' do
   context 'cuando se trata de persistir un atributo con has_many' do
     before do
       class Hijo
-        include Orm
+        include Persistible
         has_one String, named: :nombre
       end
       class Madre
-        include Orm
+        include Persistible
         has_many Hijo, named: :hijos
       end
     end
@@ -150,7 +150,7 @@ describe 'validate' do
   context 'cuando una propiedad es declarada 2 veces' do
     before do
       class Libro
-        include Orm
+        include Persistible
         has_one Numeric, named: :titulo
         has_one String, named: :titulo
       end

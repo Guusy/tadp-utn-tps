@@ -10,7 +10,7 @@ describe 'from y to' do
   context 'cuando se le declara from' do
     before do
       class Cancha
-        include Orm
+        include Persistible
         has_one Integer, named: :jugadores, from: 10
       end
     end
@@ -28,7 +28,7 @@ describe 'from y to' do
   context 'cuando se le declara to' do
     before do
       class Paintball
-        include Orm
+        include Persistible
         has_one Integer, named: :jugadores, to: 10
       end
     end
@@ -46,7 +46,7 @@ describe 'from y to' do
   context 'cuando se le declara from y to' do
     before do
       class Empresa
-        include Orm
+        include Persistible
         has_one Integer, named: :empleados, from: 50, to: 100
       end
     end

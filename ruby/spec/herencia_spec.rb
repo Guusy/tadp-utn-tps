@@ -5,11 +5,11 @@ describe 'Herencia' do
   context 'cuando se quiere persistir una clase que incluye un modulo' do
     before do
       module PatitoNoPersistible
-        include Orm
+        include Persistible
         has_one String, named: :color
       end
       class PatitoChico
-        include Orm
+        include Persistible
         include PatitoNoPersistible
         has_one String, named: :tamanio
       end
@@ -35,12 +35,12 @@ describe 'Herencia' do
     context 'sobre un has_one' do
       before do
         class Consola
-          include Orm
+          include Persistible
           has_one String, named: :origen
         end
 
         class Ps4 < Consola
-          include Orm
+          include Persistible
           has_one String, named: :compania
         end
 
@@ -62,7 +62,7 @@ describe 'Herencia' do
       context 'y una property de la subclase pisa una de super clase' do
         before do
           class Xbox < Consola
-            include Orm
+            include Persistible
             has_one Numeric, named: :origen
           end
           @xbox = Xbox.new
@@ -79,20 +79,20 @@ describe 'Herencia' do
     context 'sobre un has_many' do
       before do
         class Procesador
-          include Orm
+          include Persistible
           has_one String, named: :marca
         end
         class Led
-          include Orm
+          include Persistible
           has_one String, named: :color
         end
         class Chip
-          include Orm
+          include Persistible
           has_many Led, named: :leds
         end
 
         class MicroChip < Chip
-          include Orm
+          include Persistible
           has_many Procesador, named: :procesador
         end
 

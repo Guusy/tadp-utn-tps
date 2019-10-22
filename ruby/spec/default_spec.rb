@@ -9,7 +9,7 @@ describe 'default values' do
     context 'y se instancia el objeto' do
       before do
         class Hotel
-          include Orm
+          include Persistible
           has_one String, named: :nombre, default: "sin nombre"
         end
         @sin_nombre = Hotel.new
@@ -48,7 +48,7 @@ describe 'default values' do
       it 'falla' do
         expect{
           class UnaClaseInvalida
-            include Orm
+            include Persistible
             has_many Material, named: :empleados, default: "soy re invalido"
           end
         }.to raise_error("El valor del default no es valido")
@@ -58,11 +58,11 @@ describe 'default values' do
       context 'y se instancia el objeto' do
         before do
           class Empleado
-            include Orm
+            include Persistible
             has_one String, named: :puesto
           end
           class Oficina
-            include Orm
+            include Persistible
             has_many Empleado, named: :empleados, default: [Empleado.new]
           end
           @con_cadete = Oficina.new

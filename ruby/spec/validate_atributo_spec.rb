@@ -9,7 +9,7 @@ describe 'validate_atributo' do
     context 'y se declara sobre un has_one' do
       before do
         class Pizarra
-          include Orm
+          include Persistible
           has_one Numeric, named: :antiguedad, validate: proc { |x| x > 18 }
         end
       end
@@ -27,11 +27,11 @@ describe 'validate_atributo' do
     context 'y se declara sobre un has_many' do
       before do
         class Aula
-          include Orm
+          include Persistible
           has_one String, named: :nombre
         end
         class Universidad
-          include Orm
+          include Persistible
           has_many Aula, named: :aulas, validate: proc { |aula| aula.nombre != "magna" }
         end
       end

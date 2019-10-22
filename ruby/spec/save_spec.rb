@@ -5,7 +5,7 @@ describe 'save' do
   context 'cuando se ejecuta en un objeto no persistido con atributos primitivos' do
     before do
       class Persona
-        include Orm
+        include Persistible
         has_one String, named: :nombre
         has_one String, named: :apellido
         has_one Boolean, named: :es_enojon
@@ -41,11 +41,11 @@ describe 'save' do
   context 'cuando se ejecuta en un objeto no persistido que tiene atributos no primitivos (otras clases) ' do
     before do
       class Notebook
-        include Orm
+        include Persistible
         has_one String, named: :numero_serial
       end
       class Programador
-        include Orm
+        include Persistible
         has_one Notebook, named: :notebook
       end
     end
@@ -100,11 +100,11 @@ describe 'save' do
       context "y tienen un atributo marcado como has_many" do
         before do
           class Canal
-            include Orm
+            include Persistible
             has_one String, named: :nombre
           end
           class Slack
-            include Orm
+            include Persistible
             has_many Canal, named: :canales
           end
           @slack = Slack.new
@@ -187,7 +187,7 @@ describe 'save' do
   context 'cuando una propiedad es declarada 2 veces de has_one' do
     before do
       class Comic
-        include Orm
+        include Persistible
         has_one Numeric, named: :titulo
         has_one String, named: :titulo
       end
@@ -206,12 +206,12 @@ describe 'save' do
   context 'cuando una propiedad es declarada 2 veces de has_many' do
     before do
       class Pagina
-        include Orm
+        include Persistible
         has_one String, named: :encabezado
       end
 
       class Libro
-        include Orm
+        include Persistible
         has_many String, named: :paginas
         has_many Pagina, named: :paginas
       end

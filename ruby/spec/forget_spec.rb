@@ -1,7 +1,7 @@
 describe 'forget' do
   before do
     class Patito
-      include Orm
+      include Persistible
       has_one String, named: :nombre
     end
   end

@@ -6,10 +6,10 @@ describe 'has_many' do
   context 'cuando se le declara un has_many a una clase' do
     before do
       class Lenguaje
-        include Orm
+        include Persistible
       end
       class IDE
-        include Orm
+        include Persistible
         has_many Lenguaje, named: :lenguajes
       end
       @rubymine = IDE.new

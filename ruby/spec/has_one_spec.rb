@@ -2,7 +2,7 @@ describe 'has_one' do
   context 'cuando se declara una clase con has_one' do
     before do
       class Persona
-        include Orm
+        include Persistible
         has_one String, named: :nombre
       end
       @una_persona = Persona.new

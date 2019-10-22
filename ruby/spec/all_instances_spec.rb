@@ -1,7 +1,7 @@
 describe 'all_instances' do
   before do
     class Computadora
-      include Orm
+      include Persistible
       has_one Boolean, named: :gamer
     end
   end
@@ -43,7 +43,7 @@ describe 'all_instances' do
       context "con una dependencia simple" do
         before do
           class Teclado
-            include Orm
+            include Persistible
             has_one String, named: :tipo
           end
 
@@ -94,14 +94,14 @@ describe 'all_instances' do
   context 'cuando le preguntas un all_instances a un modulo' do
     before do
       module Atacante
-        include Orm
+        include Persistible
         has_one Numeric, named: :poder_ofensivo
       end
     end
     context 'y esta incluido en una sola clase' do
       before do
         class Guerrero
-          include Orm
+          include Persistible
           include Atacante
           has_one String, named: :rango
         end
@@ -121,12 +121,12 @@ describe 'all_instances' do
     context 'y esta incluido en varias clases' do
       before do
         class Muralla
-          include Orm
+          include Persistible
           include Atacante
           has_one String, named: :alto
         end
         class Cohete
-          include Orm
+          include Persistible
           include Atacante
           has_one String, named: :tipo_nafta
         end
@@ -152,11 +152,11 @@ describe 'all_instances' do
   context 'cuando le preguntas all_instances a una clase la cual tiene subclases' do
     before do
       class Guerrero
-        include Orm
+        include Persistible
         has_one Numeric, named: :poder_ofensivo
       end
       class Espadachin < Guerrero
-        include Orm
+        include Persistible
         has_one String, named: :rango
       end
       @guerrero_fuerte = Guerrero.new
