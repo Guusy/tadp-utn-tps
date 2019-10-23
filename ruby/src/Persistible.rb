@@ -1,5 +1,7 @@
 require 'tadb'
-require_relative './Columna'
+require_relative './Columna/HasManyColumna'
+require_relative './Columna/HasOneColumna'
+require_relative './Tabla'
 # TODO : hacer metodos mas cohesivos y empezar a delegar
 module Persistible
   def get_table
@@ -29,27 +31,10 @@ module Persistible
   end
 
   def save!
-    hash = {}
     validate!
-    # TODO :mandar a guardar todos los objetos con composicion primero y luego hacer lo demas
-    # delegar en la columa, evaluar la posibilidad de tener una clase tabla
-    get_columns.each_value do |columna|
-      hash = hash.merge(columna.obtener_hash_de(self))
-    end
-    @id = TADB::DB.table(get_table).insert(hash)
-    # Delegar en mandar en la columna de persistir la relaciones
-    columnas_has_many = get_columns.select { |_, columna| columna.has_many }
-    principal_table = get_table
-    columnas_has_many.each_value do |columna|
-      valor = self.send(columna.atributo)
-      valor = (valor.nil?) ? columna.valor_default : valor
-      valor.each do |has_many_valor|
-        id = has_many_valor.save!
-        secondary_table = columna.obtener_tabla
-        has_many_hash = {"id_#{principal_table}": @id, "id_#{secondary_table}": id}
-        TADB::DB.table("#{principal_table}_#{secondary_table}").insert(has_many_hash)
-      end
-    end
+    columnas = get_columns
+    @id = Tabla.guardar_atributos_simples(columnas, self)
+    Tabla.guardar_atributos_compuestos(columnas, self, @id)
     @id
   end
 
@@ -93,7 +78,7 @@ module Persistible
       columnas_de_superclase = get_columnas_super_clase
       columnas_de_todos = get_columna_de_todos
       @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
-      columna = Columna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
+      columna = HasOneColumna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
       definir_columna(columna)
     end
 
@@ -108,7 +93,7 @@ module Persistible
       columnas_de_superclase = get_columnas_super_clase
       columnas_de_todos = get_columna_de_todos
       @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
-      columna = Columna.new(clase: type, atributo: named, has_many: true, parametros_opcionales: parametros_opcionales)
+      columna = HasManyColumna.new(clase: type, atributo: named, parametros_opcionales: parametros_opcionales)
       definir_columna(columna)
     end
 

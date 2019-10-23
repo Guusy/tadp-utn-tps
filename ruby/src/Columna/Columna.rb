@@ -1,12 +1,20 @@
-require_relative './errores'
+require_relative '../errores'
 class Columna
-  attr_accessor :clase, :atributo, :has_many, :parametros_opcionales
+  attr_accessor :clase, :atributo, :parametros_opcionales
 
-  def initialize(clase:, atributo:, has_many: false, parametros_opcionales: {})
+  def initialize(clase:, atributo:, parametros_opcionales: {})
     @clase = clase
     @atributo = atributo
     @parametros_opcionales = parametros_opcionales
-    @has_many = has_many
+  end
+
+  def ejecutar_chequeo_de_tipos(clase_contenedora, valor)
+  end
+
+  def valor_default
+  end
+
+  def guardar_relaciones(clase, id_principal)
   end
 
   def obtener_hash_de(clase)
@@ -32,14 +40,6 @@ class Columna
 
   def obtener_tabla
     self.clase.get_table
-  end
-
-  def valor_default
-    valor = parametros_opcionales[:default]
-    if has_many
-      valor = valor ? valor : []
-    end
-    valor
   end
 
   def validar(clase_contenedora, valor)
@@ -100,25 +100,6 @@ class Columna
     if to
       if valor > to
         raise mensaje_error_mayor(atributo, to, valor)
-      end
-    end
-  end
-
-  def ejecutar_chequeo_de_tipos(clase_contenedora, valor)
-    if valor
-      if has_many
-        unless valor.is_a?(Array)
-          raise mensaje_error_de_tipos(clase_contenedora, atributo, "Array", valor)
-        end
-        valor.each do |hijo|
-          unless hijo.is_a?(clase)
-            raise mensaje_error_de_tipos(clase_contenedora, atributo, clase, hijo.class)
-          end
-        end
-      else
-        unless valor.is_a?(clase)
-          raise mensaje_error_de_tipos(clase_contenedora, atributo, clase, valor)
-        end
       end
     end
   end
