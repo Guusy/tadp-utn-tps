@@ -52,7 +52,6 @@ module Persistible
 
 
   module ClassMethods
-    # TODO :  evaluar la posibilidad de cambiar columnas a un hash
     attr_accessor :columns, :descendientes
 
     def included(sub_clase)
@@ -121,9 +120,6 @@ module Persistible
     # TODO : pensar nombres mas cohesivos y ademas dejar de tener tantos nombres iguales
     def definir_columna(columna)
       self.columns[columna.atributo] = columna
-      # TODo: Buscar la manera de no andar declarando todo el tiempo ID, deberia ser solo cuando se lo incluye
-      self.columns[:id] = Columna.new(clase: String, atributo: :id)
-      attr_accessor :id
       attr_accessor columna.atributo
       self.define_method(:initialize) do
         self.send(columna.atributo.to_s + '=', columna.valor_default)
@@ -207,6 +203,8 @@ module Persistible
 
   def self.included(base)
     base.extend(ClassMethods)
+    base.columns[:id] = Columna.new(clase: String, atributo: :id)
+    base.send(:attr_accessor,:id)
   end
 
 end
