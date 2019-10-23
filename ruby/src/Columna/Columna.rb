@@ -16,6 +16,9 @@ class Columna
 
   def guardar_relaciones(clase, id_principal)
   end
+  def validar_valor_default
+
+  end
 
   def obtener_hash_de(clase)
     hash = {}

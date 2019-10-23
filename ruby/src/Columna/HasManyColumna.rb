@@ -7,6 +7,15 @@ class HasManyColumna < Columna
     valor ? valor : []
   end
 
+  def validar_valor_default
+    valor_default = parametros_opcionales[:default]
+    if valor_default
+      unless valor_default.is_a? Array
+        raise "El valor del default no es valido"
+      end
+    end
+  end
+
   def ejecutar_chequeo_de_tipos(clase_contenedora, valor)
     if valor
       unless valor.is_a?(Array)

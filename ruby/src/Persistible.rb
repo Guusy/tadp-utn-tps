@@ -63,10 +63,7 @@ module Persistible
     end
 
     def agregar_descendiente(descendiente)
-      unless @descendientes
-        @descendientes = []
-      end
-      @descendientes.push(descendiente)
+      self.descendientes.push(descendiente)
     end
 
     def es_persistible(valor)
@@ -74,25 +71,14 @@ module Persistible
     end
 
     def has_one(type, named:, **params_opcionales)
-      columnas_de_superclase = get_columnas_super_clase
-      columnas_de_todos = get_columna_de_todos
-      @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
       columna = HasOneColumna.new(clase: type, atributo: named, parametros_opcionales: params_opcionales)
       definir_columna(columna)
     end
 
+    # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ? nice to have :D
     def has_many(type, named:, **parametros_opcionales)
-      # TODO : preguntar que pasa si un has_many pisa a un has_one, deberia ser posible ? nice to have :D
-      valor_default = parametros_opcionales[:default]
-      if valor_default
-        unless valor_default.is_a? Array
-          raise "El valor del default no es valido"
-        end
-      end
-      columnas_de_superclase = get_columnas_super_clase
-      columnas_de_todos = get_columna_de_todos
-      @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
       columna = HasManyColumna.new(clase: type, atributo: named, parametros_opcionales: parametros_opcionales)
+      columna.validar_valor_default
       definir_columna(columna)
     end
 
@@ -119,6 +105,9 @@ module Persistible
 
     # TODO : pensar nombres mas cohesivos y ademas dejar de tener tantos nombres iguales
     def definir_columna(columna)
+      columnas_de_superclase = get_columnas_super_clase
+      columnas_de_todos = get_columna_de_todos
+      @columns = self.columns.merge(columnas_de_todos.merge(columnas_de_superclase))
       self.columns[columna.atributo] = columna
       attr_accessor columna.atributo
       self.define_method(:initialize) do
@@ -135,8 +124,10 @@ module Persistible
     end
 
     def descendientes
-      # TODO:  hacer un mejor handler con un if
-      @descendientes || []
+      unless @descendientes
+        @descendientes = []
+      end
+      @descendientes
     end
 
     def find_by_id(id)
