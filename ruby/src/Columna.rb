@@ -9,6 +9,23 @@ class Columna
     @has_many = has_many
   end
 
+  def obtener_hash_de(clase)
+    hash = {}
+    valor = clase.send(atributo)
+    valor = (valor.nil?) ? valor_default : valor
+    if !valor.nil? && !valor.is_a?(Array)
+      valor_a_guardar = valor
+      if es_persistible
+        if valor.id.nil?
+          valor.save!
+        end
+        valor_a_guardar = valor.id
+      end
+      hash[atributo] = valor_a_guardar
+    end
+    hash
+  end
+
   def es_persistible
     self.clase.respond_to?(:has_one)
   end

@@ -34,18 +34,7 @@ module Persistible
     # TODO :mandar a guardar todos los objetos con composicion primero y luego hacer lo demas
     # delegar en la columa, evaluar la posibilidad de tener una clase tabla
     get_columns.each_value do |columna|
-      valor = self.send(columna.atributo)
-      valor = (valor.nil?) ? columna.valor_default : valor
-      if !valor.nil? && !valor.is_a?(Array)
-        valor_a_guardar = valor
-        if columna.es_persistible
-          if valor.id.nil?
-            valor.save!
-          end
-          valor_a_guardar = valor.id
-        end
-        hash[columna.atributo] = valor_a_guardar
-      end
+      hash = hash.merge(columna.obtener_hash_de(self))
     end
     @id = TADB::DB.table(get_table).insert(hash)
     # Delegar en mandar en la columna de persistir la relaciones
