@@ -21,6 +21,17 @@ describe 'search_by' do
   after do
     TADB::DB.clear_all
   end
+  context 'cuando se ejecuta el metodo respond_to de un search_by_ARGUMENTO' do
+    it 'responde correctamente' do
+      expect(Persona.respond_to?(:search_by_nombre)).to eq(true)
+    end
+  end
+
+  context 'cuando se ejecuta el metodo respond_to de un metodo que no entiendo o que no sea search_by_ARGUMENTO' do
+    it 'responde correctamente' do
+      expect(Persona.respond_to?(:metodoooooo)).to eq(false)
+    end
+  end
 
   context 'cuando se busca por una condicion que no cumple con ningun regitro de la base' do
     it 'devuelve un array vacio' do

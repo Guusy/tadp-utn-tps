@@ -3,6 +3,7 @@ require_relative './Columna/HasManyColumna'
 require_relative './Columna/HasOneColumna'
 require_relative './Tabla'
 # TODO : hacer metodos mas cohesivos y empezar a delegar
+SEARCH_BY_PREFIX = "search_by_"
 module Persistible
   def get_table
     self.class.get_table
@@ -168,11 +169,10 @@ module Persistible
       all_instances_clase + all_instances_descendientes
     end
 
-    # TODO: sobrescribir lo que falta para que de true el respond_to
     def method_missing(symbol, *args, &block)
       nombre_mensaje = symbol.to_s
-      if nombre_mensaje.start_with?('search_by_')
-        mensaje = nombre_mensaje.gsub('search_by_', '').to_sym
+      if nombre_mensaje.start_with?(SEARCH_BY_PREFIX)
+        mensaje = nombre_mensaje.gsub(SEARCH_BY_PREFIX, '').to_sym
         validar_su_objeto_si_responde_a(self, mensaje)
         if self.instance_method(mensaje).arity > 0
           raise "No se puede utilizar una propiedad que reciba argumentos"
@@ -185,6 +185,10 @@ module Persistible
       end
     end
 
+    def respond_to_missing?(sym, priv = false)
+      sym.to_s.start_with?(SEARCH_BY_PREFIX)
+    end
+
     def validar_su_objeto_si_responde_a(entidad, mensaje)
       unless entidad.method_defined?(mensaje)
         raise "No todos entienden #{mensaje} !"
@@ -195,7 +199,7 @@ module Persistible
   def self.included(base)
     base.extend(ClassMethods)
     base.columns[:id] = Columna.new(clase: String, atributo: :id)
-    base.send(:attr_accessor,:id)
+    base.send(:attr_accessor, :id)
   end
 
 end
