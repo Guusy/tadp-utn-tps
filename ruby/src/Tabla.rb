@@ -1,11 +1,11 @@
 require 'tadb'
 class Tabla
-  def self.guardar_atributos_simples(columnas, clase)
+  def self.guardar_atributos_simples(columnas, objeto)
     hash = {}
     columnas.each_value do |columna|
-      hash = hash.merge(columna.obtener_hash_de(clase))
+      hash = hash.merge(columna.obtener_hash_de(objeto))
     end
-    TADB::DB.table(clase.get_table).insert(hash)
+    TADB::DB.table(objeto.get_table).insert(hash)
   end
 
   def self.guardar_atributos_compuestos(columnas, clase, id)

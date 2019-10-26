@@ -14,7 +14,6 @@ describe 'has_many' do
       end
       @rubymine = IDE.new
     end
- #     TODO:  arreglar este test, ver como hacer para tener un valor por default
       it 'se le agrega el atributo como []' do
         expect(@rubymine.lenguajes).to match_array([])
       end

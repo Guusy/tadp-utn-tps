@@ -4,16 +4,9 @@ require_relative './Tabla'
 # TODO : hacer metodos mas cohesivos y empezar a delegar
 SEARCH_BY_PREFIX = "search_by_"
 module Persistible
+
   def get_table
-    self.class.get_table
-  end
-
-  def get_columns
-    self.class.columns
-  end
-
-  def popular_objeto(objeto, objeto_db)
-    self.class.popular_objeto(objeto, objeto_db)
+    clase.get_table
   end
 
   def check_id
@@ -22,36 +15,27 @@ module Persistible
     end
   end
 
-  def validate!
-    get_columns.each_value do |columna|
-      atributo = columna.atributo
-      valor = self.send(atributo)
-      columna.validar(self.class, valor)
-    end
+  def clase
+    self.class
   end
 
   def save!
-    validate!
-    columnas = get_columns
-    @id = Tabla.guardar_atributos_simples(columnas, self)
-    Tabla.guardar_atributos_compuestos(columnas, self, @id)
-    @id
+    @id = clase.save!(self)
   end
 
   def resfresh!
     check_id
-    objeto_db = Tabla.find_by_id(get_table, self.id)
-    popular_objeto(self, objeto_db)
+    clase.refresh!(self)
   end
 
   def forget!
     check_id
-    Tabla.borrar(get_table, id)
+    clase.forget!(id)
     self.id = nil
   end
 
 
-  module ClassMethods
+  module MetodosDeClase
     attr_accessor :columns, :descendientes
 
     def included(sub_clase)
@@ -103,7 +87,6 @@ module Persistible
       {}
     end
 
-    # TODO : pensar nombres mas cohesivos y ademas dejar de tener tantos nombres iguales
     def definir_columna(columna)
       columnas_de_superclase = get_columnas_super_clase
       columnas_de_todos = get_columna_de_todos
@@ -134,6 +117,30 @@ module Persistible
       objeto = self.new
       popular_objeto(objeto, objeto_db)
       objeto
+    end
+
+    def refresh!(objeto)
+      objeto_db = Tabla.find_by_id(get_table, objeto.id)
+      popular_objeto(objeto, objeto_db)
+    end
+
+    def save!(objeto)
+      self.validate!(objeto)
+      id = Tabla.guardar_atributos_simples(columns, objeto)
+      Tabla.guardar_atributos_compuestos(columns, objeto, id)
+      id
+    end
+
+    def forget!(id)
+      Tabla.borrar(get_table, id)
+    end
+
+    def validate!(objeto)
+      columns.each_value do |columna|
+        atributo = columna.atributo
+        valor = objeto.send(atributo)
+        columna.validar(self, valor)
+      end
     end
 
     def popular_objeto(objeto, objeto_db)
@@ -189,7 +196,7 @@ module Persistible
   end
 
   def self.included(base)
-    base.extend(ClassMethods)
+    base.extend(MetodosDeClase)
     base.columns[:id] = Columna.new(clase: String, atributo: :id)
     base.send(:attr_accessor, :id)
   end

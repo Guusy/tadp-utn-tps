@@ -20,9 +20,9 @@ class Columna
 
   end
 
-  def obtener_hash_de(clase)
+  def obtener_hash_de(objeto)
     hash = {}
-    valor = clase.send(atributo)
+    valor = objeto.send(atributo)
     valor = (valor.nil?) ? valor_default : valor
     if !valor.nil? && !valor.is_a?(Array)
       valor_a_guardar = valor
