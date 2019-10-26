@@ -1,4 +1,3 @@
-require 'tadb'
 require_relative './Columna/HasManyColumna'
 require_relative './Columna/HasOneColumna'
 require_relative './Tabla'
@@ -14,7 +13,7 @@ module Persistible
   end
 
   def popular_objeto(objeto, objeto_db)
-    self.class.popular_objeto(objeto, objeto_db, get_columns)
+    self.class.popular_objeto(objeto, objeto_db)
   end
 
   def check_id
@@ -41,13 +40,13 @@ module Persistible
 
   def resfresh!
     check_id
-    objeto_db = self.class.find_by_id(self.id)
+    objeto_db = Tabla.find_by_id(get_table, self.id)
     popular_objeto(self, objeto_db)
   end
 
   def forget!
     check_id
-    TADB::DB.table(get_table).delete(self.id)
+    Tabla.borrar(get_table, id)
     self.id = nil
   end
 
@@ -131,25 +130,18 @@ module Persistible
       @descendientes
     end
 
-    def find_by_id(id)
-      TADB::DB.table(self.name.downcase)
-          .entries
-          .select { |entry| entry[:id] === id }
-          .first
-    end
-
     def obtener_objeto_de_dominio(objeto_db)
       objeto = self.new
-      popular_objeto(objeto, objeto_db, self.columns)
+      popular_objeto(objeto, objeto_db)
       objeto
     end
 
-    def popular_objeto(objeto, objeto_db, columnas)
-      columnas.each_value { |columna|
+    def popular_objeto(objeto, objeto_db)
+      self.columns.each_value { |columna|
         valor = objeto_db[columna.atributo]
         if columna.es_persistible
           id = valor
-          valor = columna.clase.obtener_objeto_de_dominio(columna.clase.find_by_id(id))
+          valor = columna.clase.obtener_objeto_de_dominio(Tabla.find_by_id(columna.clase.get_table, id))
         end
         objeto.instance_variable_set("@#{columna.atributo}", valor)
       }
@@ -163,7 +155,7 @@ module Persistible
       all_instances_descendientes = self.descendientes.flat_map do |descendiente|
         descendiente.all_instances
       end
-      all_instances_clase = TADB::DB.table(get_table).entries.map { |entry|
+      all_instances_clase = Tabla.all_instances(get_table).map { |entry|
         self.obtener_objeto_de_dominio(entry)
       }
       all_instances_clase + all_instances_descendientes
